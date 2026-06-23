@@ -1,0 +1,69 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configurations and tasks you actually
+# want to commit.  Some settings however should not be committed.
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/cmake-kits.json
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/DerivedData/
+**.fbi
+**.test_log
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/.dart_tool/
+build/
+linux/flutter/ephemeral/
+macos/flutter/ephemeral/
+windows/flutter/ephemeral/
+
+# Android related
+**/android/**/generated/
+**/android/app/src/main/res/values/strings.xml
+**/android/key.properties
+**/android/local.properties
+**/android/app/google-services.json
+**/android/.gradle/
+**/android/captures/
+**/android/gradle-app.setting
+**/android/build/
+**/android/app/build/
+**/*.keystore
+**/*.jks
+
+# Logs and databases
+*.db
+*.db-journal
+*.sqlite
+backup/*.json
+
+# Symbol database for Drift
+lib/core/database/app_database.g.dart
+lib/core/database/daos/*.g.dart
