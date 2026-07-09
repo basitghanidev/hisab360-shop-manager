@@ -156,22 +156,43 @@ class _ItemPickerSheetState extends ConsumerState<_ItemPickerSheet> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         title: Text(item.name, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600)),
                         subtitle: Text('Stock: ${item.currentStock}', style: AppTextStyles.caption),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min, // Use minimum size to prevent overflow
-                          children: [
-                            Text(CurrencyFormatter.formatPaisa(displayPaisa),
-                                style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                            Text(priceLabel, style: AppTextStyles.caption.copyWith(color: AppColors.textLight, fontSize: 10)),
-                            if (isLowStock)
-                              Container(
-                                margin: const EdgeInsets.only(top: 1),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                decoration: BoxDecoration(color: AppColors.danger.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                                child: const Text('Kam Maal!', style: TextStyle(fontSize: 9, color: AppColors.danger, fontWeight: FontWeight.bold)),
+                        trailing: ConstrainedBox(
+                          // ListTile trailing area is typically constrained to about 72px height.
+                          // Constrain explicitly so children never exceed this, preventing overflow.
+                          constraints: const BoxConstraints(maxWidth: 90, maxHeight: 72),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min, // Use minimum size to prevent overflow
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  CurrencyFormatter.formatPaisa(displayPaisa),
+                                  style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                                ),
                               ),
-                          ],
+                              Text(
+                                priceLabel,
+                                style: AppTextStyles.caption.copyWith(color: AppColors.textLight, fontSize: 10),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (isLowStock)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 1),
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.danger.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'Kam!', // Shortened to save space
+                                    style: TextStyle(fontSize: 9, color: AppColors.danger, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                         onTap: () => Navigator.pop(context, item),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

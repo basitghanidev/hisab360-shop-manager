@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentery_app/core/constants/app_strings.dart';
 import 'package:sentery_app/router/app_router.dart';
 import 'package:sentery_app/core/constants/app_colors.dart';
 
@@ -12,7 +12,7 @@ class SenteryApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Sentery Shop',
+      title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: ThemeData(
@@ -37,9 +37,42 @@ class SenteryApp extends ConsumerWidget {
           iconTheme: IconThemeData(color: AppColors.primary),
         ),
       ),
-      // For iOS native feel, we can also use CupertinoThemeData if we use CupertinoApp
-      // But usually MaterialApp with custom themes is more flexible for both platforms
-      // and we can still use Cupertino widgets inside.
+      builder: (context, child) {
+        return _ResponsiveWrapper(child: child!);
+      },
+    );
+  }
+}
+
+class _ResponsiveWrapper extends StatelessWidget {
+  final Widget child;
+  const _ResponsiveWrapper({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 900) {
+          return Container(
+            color: Colors.grey[100],
+            alignment: Alignment.center,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: child,
+            ),
+          );
+        }
+        return child;
+      },
     );
   }
 }

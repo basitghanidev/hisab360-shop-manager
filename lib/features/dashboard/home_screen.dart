@@ -20,9 +20,11 @@ class HomeScreen extends ConsumerWidget {
     final lowStockAsync = ref.watch(lowStockItemsProvider);
     final settingsAsync = ref.watch(settingsStreamProvider);
 
+    final crossAxisCount = MediaQuery.of(context).size.width > 900 ? 4 : 2;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('📋 SHOP MANAGER', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        title: const Text('📋 Hisab360', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         actions: [
           AnimatedSyncIcon(
             onPressed: () {
@@ -63,29 +65,38 @@ class HomeScreen extends ConsumerWidget {
             dashboardAsync.when(
               data: (data) => Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(child: _statCard('Today Sale', CurrencyFormatter.format(data.todaySales), AppColors.primary, Icons.trending_up)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _statCard('Monthly Sale', CurrencyFormatter.format(data.monthSales), AppColors.accent, Icons.calendar_month)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _statCard('Cash Taken (Today)', CurrencyFormatter.format(data.todayReceived), AppColors.success, Icons.payments)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _statCard('Cash Paid (Today)', CurrencyFormatter.format(data.todayPaid), AppColors.danger, Icons.outbox)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _statCard('Total Receivable', CurrencyFormatter.format(data.wholesalerOutstanding + data.customerOutstanding + data.supplierCredit), AppColors.success, Icons.arrow_downward)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _statCard('Total Payable', CurrencyFormatter.format(data.supplierOutstanding + data.wholesalerCredit + data.customerCredit), AppColors.danger, Icons.arrow_upward)),
-                    ],
-                  ),
+                  LayoutBuilder(builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 600;
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: _statCard('Today Sale', CurrencyFormatter.format(data.todaySales), AppColors.primary, Icons.trending_up)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _statCard('Monthly Sale', CurrencyFormatter.format(data.monthSales), AppColors.accent, Icons.calendar_month)),
+                            if (isWide) ...[
+                              const SizedBox(width: 12),
+                              Expanded(child: _statCard('Cash Taken (Today)', CurrencyFormatter.format(data.todayReceived), AppColors.success, Icons.payments)),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            if (!isWide) ...[
+                              Expanded(child: _statCard('Cash Taken (Today)', CurrencyFormatter.format(data.todayReceived), AppColors.success, Icons.payments)),
+                              const SizedBox(width: 12),
+                            ],
+                            Expanded(child: _statCard('Cash Paid (Today)', CurrencyFormatter.format(data.todayPaid), AppColors.danger, Icons.outbox)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _statCard('Total Receivable', CurrencyFormatter.format(data.wholesalerOutstanding + data.customerOutstanding + data.supplierCredit), AppColors.success, Icons.arrow_downward)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _statCard('Total Payable', CurrencyFormatter.format(data.supplierOutstanding + data.wholesalerCredit + data.customerCredit), AppColors.danger, Icons.arrow_upward)),
+                          ],
+                        ),
+                      ],
+                    );
+                  }),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: () => context.push('/reports/business-stats'),
@@ -161,7 +172,7 @@ class HomeScreen extends ConsumerWidget {
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
+              crossAxisCount: crossAxisCount,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               childAspectRatio: 1.4,
@@ -174,16 +185,6 @@ class HomeScreen extends ConsumerWidget {
                 _actionCard(context, Icons.drafts_outlined, 'Drafts', 'Adhoori Bills', '/drafts', Colors.deepOrange),
                 _actionCard(context, Icons.people_outline, 'People', 'Logon Ka Hisab', '/people', Colors.blueGrey),
               ],
-            ),
-            const SizedBox(height: 32),
-            Center(
-              child: Column(
-                children: [
-                  Text('SENTERY POS v1.1.0', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text('Powered & Designed by Basit Ghani', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.textSecondary)),
-                ],
-              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -236,17 +237,6 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(eng, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
             Text(urdu, style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.center),
-            const SizedBox(height: 32),
-            Center(
-              child: Column(
-                children: [
-                  Text('SENTERY POS v1.1.0', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text('Powered & Designed by Basit Ghani', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
           ],
         ),
       ),

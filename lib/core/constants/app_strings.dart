@@ -1,7 +1,7 @@
 class AppStrings {
   // App Name
-  static const String appName = 'Shop Management';
-  static const String appNameRoman = 'Dukan Intezam';
+  static const String appName = 'Hisab360';
+  static const String appNameRoman = 'Hisab 360';
 
   // Navigation
   static const String home = 'Home';

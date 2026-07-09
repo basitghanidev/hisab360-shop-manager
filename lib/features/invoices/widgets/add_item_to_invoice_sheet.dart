@@ -309,23 +309,34 @@ class _AddItemToInvoiceSheetState extends ConsumerState<AddItemToInvoiceSheet> {
       return;
     }
     
-    // Prevent adding item if stock is zero or insufficient (only for sales)
+    // ─── STOCK CHECK ────────────────────────────────────────────────
+    // Block the item from being added if it has zero or insufficient stock.
+    // Check against current draft total for this item (user may add same
+    // item twice before saving).
     if (!widget.isPurchase) {
-      if (_selectedItem!.currentStock <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Stock khatam hai (Out of Stock). Cannot add to bill.'),
-          backgroundColor: AppColors.danger,
-        ));
-        return;
-      }
-      if (qty > _selectedItem!.currentStock) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Tadaad maujooda maal se zyada hai. Only ${_selectedItem!.currentStock} available.'),
-          backgroundColor: AppColors.danger,
-        ));
-        return;
+      final alreadyInDraft = ref
+          .read(invoiceDraftItemsProvider)
+          .where((d) => d.itemId == _selectedItem!.id)
+          .fold(0.0, (sum, d) => sum + d.quantity);
+
+      final totalRequested = alreadyInDraft + qty;
+      if (totalRequested > _selectedItem!.currentStock) {
+        final available = _selectedItem!.currentStock - alreadyInDraft;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Not enough stock for "${_selectedItem!.name}".\n'
+              'Available: ${available.toStringAsFixed(0)} | '
+              'Requested: ${qty.toStringAsFixed(0)}',
+            ),
+            backgroundColor: AppColors.danger,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        return; // Block the add — do not proceed.
       }
     }
+    // ─────────────────────────────────────────────────────────────────
 
     if (price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Price must be greater than 0')));

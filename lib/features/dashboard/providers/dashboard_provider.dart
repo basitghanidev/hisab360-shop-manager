@@ -37,7 +37,7 @@ final reportDaoProvider = Provider<ReportDao>((ref) {
   return ref.watch(databaseProvider).reportDao;
 });
 
-final dashboardProvider = FutureProvider<DashboardData>((ref) async {
+final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async {
   final dao = ref.watch(reportDaoProvider);
   return DashboardData(
     todaySales: await dao.getTodaySales(),

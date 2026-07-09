@@ -6,6 +6,8 @@ import 'package:sentery_app/core/constants/app_text_styles.dart';
 import 'package:sentery_app/core/database/app_database.dart';
 import 'package:sentery_app/core/utils/currency_formatter.dart';
 import 'package:sentery_app/core/utils/money_utils.dart';
+import 'package:sentery_app/features/dashboard/providers/dashboard_provider.dart';
+import 'package:sentery_app/features/reports/providers/report_provider.dart';
 import 'package:sentery_app/features/returns/providers/return_provider.dart';
 import 'package:sentery_app/features/items/providers/item_provider.dart';
 import 'package:sentery_app/features/suppliers/providers/supplier_provider.dart';
@@ -160,19 +162,31 @@ class _CreateReturnScreenState extends ConsumerState<CreateReturnScreen> {
     final invoicesAsync = ref.watch(invoicesByPartyProvider((partyType, partyId)));
 
     return invoicesAsync.when(
-      data: (list) => AppCard(
-        child: DropdownButtonFormField<int>(
-          value: _selectedInvoiceId,
-          isExpanded: true,
-          hint: const Text('Link to Original Bill (Optional)'),
-          items: [
-            const DropdownMenuItem(value: null, child: Text('No Bill Link')),
-            ...list.map((i) => DropdownMenuItem(value: i.id, child: Text(i.invoiceNumber))),
-          ],
-          onChanged: (v) => setState(() => _selectedInvoiceId = v),
-          decoration: const InputDecoration(labelText: 'Billed As (Pichla Bill)', border: InputBorder.none),
-        ),
-      ),
+      data: (list) {
+        // Defensive fix: Ensure selected invoice still exists in the list.
+        if (_selectedInvoiceId != null && !list.any((i) => i.id == _selectedInvoiceId)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _selectedInvoiceId = null);
+          });
+        }
+        
+        final bool selectedIsValid = _selectedInvoiceId != null && list.any((i) => i.id == _selectedInvoiceId);
+        final int? effectiveId = selectedIsValid ? _selectedInvoiceId : null;
+
+        return AppCard(
+          child: DropdownButtonFormField<int>(
+            value: effectiveId,
+            isExpanded: true,
+            hint: const Text('Link to Original Bill (Optional)'),
+            items: [
+              const DropdownMenuItem(value: null, child: Text('No Bill Link')),
+              ...list.map((i) => DropdownMenuItem(value: i.id, child: Text(i.invoiceNumber))),
+            ],
+            onChanged: (v) => setState(() => _selectedInvoiceId = v),
+            decoration: const InputDecoration(labelText: 'Billed As (Pichla Bill)', border: InputBorder.none),
+          ),
+        );
+      },
       loading: () => const LinearProgressIndicator(),
       error: (e, _) => Text('Error loading bills: $e'),
     );
@@ -374,6 +388,10 @@ class _CreateReturnScreenState extends ConsumerState<CreateReturnScreen> {
       paymentMethod: _paymentMethod,
     );
 
+    // After successful save, invalidate dashboard and low stock so it reflects new data immediately.
+    ref.invalidate(dashboardProvider);
+    ref.invalidate(lowStockItemsProvider);
+
     if (mounted) {
       context.pop();
     }
@@ -443,10 +461,21 @@ class _AddReturnItemSheetState extends ConsumerState<AddReturnItemSheet> {
             ElevatedButton(
               onPressed: () {
                 if (_selectedItem != null) {
+                  final qty = double.tryParse(_qtyController.text) ?? 1.0;
+                  
+                  // If returning TO supplier, ensure we have enough stock to give back
+                  if (widget.isSupplier && qty > _selectedItem!.currentStock) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Tadaad maujooda maal se zyada hai. Only ${_selectedItem!.currentStock} available.'),
+                      backgroundColor: AppColors.danger,
+                    ));
+                    return;
+                  }
+
                   widget.onAdd(ReturnItemDraft(
                     _selectedItem!.id, 
                     _selectedItem!.name, 
-                    double.tryParse(_qtyController.text) ?? 1.0, 
+                    qty,
                     double.tryParse(_priceController.text) ?? 0.0,
                     Money.fromPaisa(_selectedItem!.averageCost).toDouble(),
                   ));

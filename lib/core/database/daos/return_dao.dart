@@ -79,30 +79,53 @@ class ReturnDao extends DatabaseAccessor<AppDatabase> with _$ReturnDaoMixin {
           entryType: 'return',
           debit: const Value(0),
           credit: Value(totalReturnAmount),
-          balanceAfter: Value(newBalance),
+          balanceAfter: Value(s.currentBalance - totalReturnAmount), // Balance BEFORE payment
           invoiceId: Value(invoiceId),
-          paymentId: amountPaidToday > 0 ? Value(paymentId) : const Value.absent(),
         ));
+
+        if (amountPaidToday > 0) {
+          await into(ledgerEntries).insert(LedgerEntriesCompanion.insert(
+            partyType: 'supplier',
+            partyId: sId,
+            entryType: 'payment',
+            debit: Value(amountPaidToday),
+            credit: const Value(0),
+            balanceAfter: Value(newBalance), // Final balance after payment
+            invoiceId: Value(invoiceId),
+            paymentId: Value(paymentId),
+          ));
+        }
+
         await (update(suppliers)..where((t) => t.id.equals(sId))).write(SuppliersCompanion(currentBalance: Value(newBalance)));
 
       } else if (type == 'return_wholesaler' && finalReturnInvoice.wholesalerId.value != null) {
         final wId = finalReturnInvoice.wholesalerId.value!;
         final w = await (select(wholesalers)..where((t) => t.id.equals(wId))).getSingle();
-        // Return from wholesaler: we owe them money.
-        // customer/wholesaler: positive = they owe us, negative = we owe them.
-        // So balance decreases by unpaid amount.
         final newBalance = w.currentBalance - unpaidReturnAmount; 
 
         await into(ledgerEntries).insert(LedgerEntriesCompanion.insert(
           partyType: 'wholesaler',
           partyId: wId,
           entryType: 'return',
-          debit: const Value(0),
-          credit: Value(totalReturnAmount),
-          balanceAfter: Value(newBalance),
+          debit: Value(totalReturnAmount),
+          credit: const Value(0),
+          balanceAfter: Value(w.currentBalance - totalReturnAmount),
           invoiceId: Value(invoiceId),
-          paymentId: amountPaidToday > 0 ? Value(paymentId) : const Value.absent(),
         ));
+
+        if (amountPaidToday > 0) {
+          await into(ledgerEntries).insert(LedgerEntriesCompanion.insert(
+            partyType: 'wholesaler',
+            partyId: wId,
+            entryType: 'payment',
+            debit: Value(amountPaidToday),    // ← CORRECT: shop paid wholesaler
+            credit: const Value(0),
+            balanceAfter: Value(newBalance),
+            invoiceId: Value(invoiceId),
+            paymentId: Value(paymentId),
+          ));
+        }
+
         await (update(wholesalers)..where((t) => t.id.equals(wId))).write(WholesalersCompanion(currentBalance: Value(newBalance)));
 
       } else if (type == 'return_customer' && finalReturnInvoice.customerId.value != null) {
@@ -114,12 +137,25 @@ class ReturnDao extends DatabaseAccessor<AppDatabase> with _$ReturnDaoMixin {
           partyType: 'customer',
           partyId: cId,
           entryType: 'return',
-          debit: const Value(0),
-          credit: Value(totalReturnAmount),
-          balanceAfter: Value(newBalance),
+          debit: Value(totalReturnAmount),
+          credit: const Value(0),
+          balanceAfter: Value(c.currentBalance - totalReturnAmount),
           invoiceId: Value(invoiceId),
-          paymentId: amountPaidToday > 0 ? Value(paymentId) : const Value.absent(),
         ));
+
+        if (amountPaidToday > 0) {
+          await into(ledgerEntries).insert(LedgerEntriesCompanion.insert(
+            partyType: 'customer',
+            partyId: cId,
+            entryType: 'payment',
+            debit: Value(amountPaidToday),    // ← CORRECT: shop paid customer
+            credit: const Value(0),
+            balanceAfter: Value(newBalance),
+            invoiceId: Value(invoiceId),
+            paymentId: Value(paymentId),
+          ));
+        }
+
         await (update(customers)..where((t) => t.id.equals(cId))).write(CustomersCompanion(currentBalance: Value(newBalance)));
       }
 

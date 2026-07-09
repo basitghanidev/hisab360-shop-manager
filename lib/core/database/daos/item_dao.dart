@@ -95,6 +95,12 @@ class ItemDao extends DatabaseAccessor<AppDatabase> with _$ItemDaoMixin {
   Future<int> insertCategory(ItemCategoriesCompanion category) => into(itemCategories).insert(category);
   Future<int> insertUnitType(UnitTypesCompanion unitType) => into(unitTypes).insert(unitType);
 
+  Future<int> deleteCategory(int id) async {
+    // Optional: check if items are using this category.
+    // For now, just delete. Items using it will have categoryId set to null (drift handles references).
+    return (delete(itemCategories)..where((t) => t.id.equals(id))).go();
+  }
+
   Future<void> addStockBatch({
     required int itemId,
     int? supplierId,
@@ -171,6 +177,19 @@ class ItemDao extends DatabaseAccessor<AppDatabase> with _$ItemDaoMixin {
       final item = await getItemById(itemId);
       if (item == null) return;
 
+      // ─── ZERO-STOCK GUARD ──────────────────────────────────────────
+      // Hard block: never allow stock to go below 0. If the requested
+      // quantity exceeds available stock, throw so the calling invoice
+      // transaction rolls back cleanly and the UI shows an error.
+      if (item.currentStock < quantity) {
+        throw InsufficientStockException(
+          itemName: item.name,
+          available: item.currentStock,
+          requested: quantity,
+        );
+      }
+      // ──────────────────────────────────────────────────────────────
+
       final batches = await (select(stockBatches)
             ..where((t) => t.itemId.equals(itemId) & t.quantityRemaining.isBiggerThanValue(0))
             ..orderBy([(t) => OrderingTerm.asc(t.purchaseDate)]))
@@ -208,4 +227,20 @@ class ItemDao extends DatabaseAccessor<AppDatabase> with _$ItemDaoMixin {
           ..limit(limit))
         .get();
   }
+}
+
+class InsufficientStockException implements Exception {
+  final String itemName;
+  final double available;
+  final double requested;
+  const InsufficientStockException({
+    required this.itemName,
+    required this.available,
+    required this.requested,
+  });
+
+  @override
+  String toString() =>
+      'Insufficient stock for "$itemName": available ${available.toStringAsFixed(0)}, '
+      'requested ${requested.toStringAsFixed(0)}';
 }

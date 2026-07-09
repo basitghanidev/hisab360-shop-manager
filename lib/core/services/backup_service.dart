@@ -33,11 +33,12 @@ class BackupService {
     'draft_invoices',
   ];
 
-  /// Export all data to a JSON file and share it.
-  Future<String> exportBackup() async {
+  /// Creates the backup file and returns its path.
+  /// Does NOT open a share sheet. Used by Google Drive upload and unit tests.
+  Future<String> createBackupFile() async {
     final data = await _buildBackupPayload();
     final jsonString = jsonEncode(data);
-    
+
     final String tempDir;
     if (testTempPath != null) {
       tempDir = testTempPath!;
@@ -46,17 +47,30 @@ class BackupService {
       tempDir = directory.path;
     }
 
-    final filename = 'sentery_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+    // Use a FIXED filename so each Drive sync overwrites the previous backup
+    // instead of creating a new file every time (prevents Drive storage clutter).
+    const filename = 'hisab360_backup.json';
     final file = File('$tempDir/$filename');
     await file.writeAsString(jsonString);
+    return file.path;
+  }
+
+  /// Creates the backup file AND opens the OS share sheet.
+  /// Used by the "Manual Backup & Share" button only.
+  Future<String> exportAndShare() async {
+    final path = await createBackupFile();
+    final file = File(path);
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: 'Sentery POS Data Backup — ${DateTime.now().toLocal().toString().split('.')[0]}',
+      text: 'Hisab360 Backup — ${DateTime.now().toLocal().toString().split('.')[0]}',
     );
 
-    return file.path;
+    return path;
   }
+
+  /// Export all data to a JSON file and share it.
+  Future<String> exportBackup() => exportAndShare();
 
   /// Helper for automated testing.
   Future<String> exportBackupAsString() async {
@@ -99,9 +113,17 @@ class BackupService {
     }
   }
 
-  /// Restore from a JSON backup file.
-  Future<void> restoreBackup(String jsonContent) async {
-    final Map<String, dynamic> data = jsonDecode(jsonContent);
+  /// Restore from a JSON backup file or string content.
+  Future<void> restoreBackup(dynamic source) async {
+    final Map<String, dynamic> data;
+    if (source is String) {
+      data = jsonDecode(source);
+    } else if (source is File) {
+      final content = await source.readAsString();
+      data = jsonDecode(content);
+    } else {
+      throw ArgumentError('Source must be String or File');
+    }
 
     await _db.transaction(() async {
       // Delete in reverse dependency order.

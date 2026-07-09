@@ -13,8 +13,15 @@ class ReturnRepository {
   Future<int> createReturnInvoice({
     required InvoicesCompanion returnInvoice,
     required List<InvoiceItemsCompanion> returnedItems,
+    int amountPaidToday = 0,
+    String? paymentMethod,
   }) async {
-    final id = await _dao.createReturnInvoice(returnInvoice: returnInvoice, returnedItems: returnedItems);
+    final id = await _dao.createReturnInvoice(
+      returnInvoice: returnInvoice,
+      returnedItems: returnedItems,
+      amountPaidToday: amountPaidToday,
+      paymentMethod: paymentMethod,
+    );
     await _audit.logAction(action: 'create_return', table: 'invoices', recordId: id, newData: {'type': returnInvoice.invoiceType.value});
     return id;
   }

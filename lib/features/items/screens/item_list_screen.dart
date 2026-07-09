@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:sentery_app/core/constants/app_colors.dart';
 import 'package:sentery_app/core/constants/app_strings.dart';
 import 'package:sentery_app/core/constants/app_text_styles.dart';
+import 'package:sentery_app/core/database/database_provider.dart';
+import 'package:sentery_app/core/services/item_export_service.dart';
+import 'package:sentery_app/core/services/item_import_service.dart';
 import 'package:sentery_app/core/utils/currency_formatter.dart';
 import 'package:sentery_app/core/widgets/app_card.dart';
 import 'package:sentery_app/core/widgets/bilingual_label.dart';
@@ -31,6 +36,16 @@ class ItemListScreen extends ConsumerWidget {
           englishStyle: AppTextStyles.navTitle,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_upload_outlined, size: 22),
+            tooltip: 'Export Items',
+            onPressed: () => _handleExport(context, ref),
+          ),
+          IconButton(
+            icon: const Icon(Icons.file_download_outlined, size: 22),
+            tooltip: 'Import Items',
+            onPressed: () => _handleImport(context, ref),
+          ),
           IconButton(icon: const Icon(Icons.add), onPressed: () => context.push('/items/add')),
         ],
         bottom: PreferredSize(
@@ -170,6 +185,94 @@ class ItemListScreen extends ConsumerWidget {
         selectedColor: AppColors.primary,
         backgroundColor: Colors.grey[100],
         onSelected: (_) => ref.read(itemCategoryFilterProvider.notifier).state = categoryId,
+      ),
+    );
+  }
+
+  Future<void> _handleImport(BuildContext context, WidgetRef ref) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['xlsx', 'csv'],
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    // Show loading dialog
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final file = File(result.files.single.path!);
+      final db = ref.read(databaseProvider);
+      final importResult = await ItemImportService(db).importFromFile(file);
+      
+      if (context.mounted) Navigator.pop(context); // Close loading
+
+      if (context.mounted) {
+        if (importResult.success) {
+          ref.invalidate(itemsStreamProvider);
+          ref.invalidate(categoriesStreamProvider);
+          
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Import Complete'),
+              content: Text('Successfully imported ${importResult.count} items.\nFailed rows: ${importResult.failed}'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Import failed: ${importResult.message}'), backgroundColor: AppColors.danger),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context); // Close loading
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.danger),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleExport(BuildContext context, WidgetRef ref) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Export Format Chunein', style: AppTextStyles.cardTitle),
+          ),
+          ListTile(
+            leading: const Icon(Icons.table_chart, color: Colors.green),
+            title: const Text('Excel (.xlsx)'),
+            onTap: () async {
+              Navigator.pop(ctx);
+              final db = ref.read(databaseProvider);
+              await ItemExportService(db).exportToExcel();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.description, color: Colors.blue),
+            title: const Text('CSV (.csv)'),
+            onTap: () async {
+              Navigator.pop(ctx);
+              final db = ref.read(databaseProvider);
+              await ItemExportService(db).exportToCsv();
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

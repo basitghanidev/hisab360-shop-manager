@@ -9,6 +9,8 @@ import 'package:sentery_app/core/database/app_database.dart';
 import 'package:sentery_app/core/utils/currency_formatter.dart';
 import 'package:sentery_app/core/utils/money_utils.dart';
 import 'package:sentery_app/features/invoices/providers/invoice_provider.dart';
+import 'package:sentery_app/features/dashboard/providers/dashboard_provider.dart';
+import 'package:sentery_app/features/reports/providers/report_provider.dart';
 import 'package:sentery_app/features/items/providers/item_provider.dart';
 import 'package:sentery_app/features/suppliers/providers/supplier_provider.dart';
 import 'package:sentery_app/core/widgets/app_card.dart';
@@ -465,6 +467,10 @@ class _PurchaseInvoiceScreenState extends ConsumerState<PurchaseInvoiceScreen> {
       ref.read(invoiceDraftItemsProvider.notifier).state = [];
       await ref.read(draftServiceProvider).clearPurchaseDraft();
       
+      // After successful save, invalidate dashboard and low stock so it reflects new data immediately.
+      ref.invalidate(dashboardProvider);
+      ref.invalidate(lowStockItemsProvider);
+
       if (mounted) {
         await InvoicePdfService(ref.read(databaseProvider)).previewInvoice(id);
         context.pop();

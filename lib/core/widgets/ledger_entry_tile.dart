@@ -35,10 +35,23 @@ class LedgerEntryTile extends ConsumerWidget {
         color = AppColors.success;
         actionLabel = entry.entryType == 'payment' ? 'Wasooli (Received)' : (entry.entryType == 'return' ? 'Maal Wapsi (Return)' : 'Maine Liye (Adjustment)');
         amountPaisa = entry.credit;
-      } else { // We gave them goods (Invoice) or we paid them (Refund)
+      } else { // We gave them goods (Invoice) or we paid them (Refund/Return)
         color = AppColors.danger;
-        actionLabel = entry.entryType == 'invoice' ? 'Maal Diya (Sale)' : (entry.entryType == 'payment' ? 'Wapsi Adaigi (Refund)' : 'Maine Diye (Adjustment)');
-        amountPaisa = entry.debit;
+        if (entry.entryType == 'invoice') {
+          actionLabel = 'Maal Diya (Sale)';
+          amountPaisa = entry.debit;
+        } else if (entry.entryType == 'return') {
+          // ─── FIXED: return shows RED "Hum Ne Dena Hai" ───────────────
+          actionLabel = 'Maal Wapsi — Hum Ne Dena Hai';
+          amountPaisa = entry.debit;
+          // ─────────────────────────────────────────────────────────────
+        } else if (entry.entryType == 'payment') {
+          actionLabel = 'Wapsi Adaigi (Refund Paid)';
+          amountPaisa = entry.debit;
+        } else {
+          actionLabel = 'Maine Diye (Adjustment)';
+          amountPaisa = entry.debit;
+        }
       }
     }
 

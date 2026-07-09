@@ -8,6 +8,7 @@ import 'package:sentery_app/core/utils/currency_formatter.dart';
 import 'package:sentery_app/core/utils/money_utils.dart';
 import 'package:sentery_app/features/customers/providers/customer_provider.dart';
 import 'package:sentery_app/features/dashboard/providers/dashboard_provider.dart';
+import 'package:sentery_app/features/reports/providers/report_provider.dart';
 import 'package:sentery_app/features/invoices/providers/invoice_provider.dart';
 import 'package:sentery_app/features/suppliers/providers/supplier_provider.dart';
 import 'package:sentery_app/features/wholesalers/providers/wholesaler_provider.dart';
@@ -69,6 +70,30 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildDirectionToggle(),
+              if (_paymentDirection == 'money_out' && _partyType != 'supplier') ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.danger.withOpacity(0.25)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.arrow_upward, color: AppColors.danger, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Shop is PAYING this party (Hum Inhe De Rahe Hain).\n'
+                          'This money goes OUT of the shop.',
+                          style: TextStyle(fontSize: 12, color: AppColors.danger, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               _buildTypeSelector(),
               const SizedBox(height: 20),
@@ -191,7 +216,38 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               isExpanded: true,
               hint: const Text('Search party...'),
               items: items.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
-              onChanged: (v) => setState(() { _selectedPartyId = v; _selectedInvoiceId = null; }),
+              onChanged: (v) async {
+                if (v == null) return;
+                setState(() {
+                  _selectedPartyId = v;
+                  _selectedInvoiceId = null;
+                  _amountController.clear();
+                });
+
+                // ─── AUTO-DIRECTION FROM BALANCE ───────────────────────────────
+                // If this customer/wholesaler has a negative balance, the shop
+                // owes them money. Default to money_out (we pay them).
+                // This prevents the user from accidentally recording money_in
+                // when the shop is the one doing the paying.
+                if (_partyType == 'customer') {
+                  final customers = await ref.read(customersStreamProvider.future);
+                  final party = customers.where((c) => c.id == v).firstOrNull;
+                  if (party != null && mounted) {
+                    setState(() {
+                      _paymentDirection = party.currentBalance < 0 ? 'money_out' : 'money_in';
+                    });
+                  }
+                } else if (_partyType == 'wholesaler') {
+                  final wholesalers = await ref.read(wholesalersStreamProvider.future);
+                  final party = wholesalers.where((w) => w.id == v).firstOrNull;
+                  if (party != null && mounted) {
+                    setState(() {
+                      _paymentDirection = party.currentBalance < 0 ? 'money_out' : 'money_in';
+                    });
+                  }
+                }
+                // ─────────────────────────────────────────────────────────────
+              },
               decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
           ],
@@ -206,46 +262,79 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     final invoicesAsync = ref.watch(invoicesByPartyProvider((_partyType, _selectedPartyId!)));
     return invoicesAsync.when(
       data: (list) {
-        final pending = list.where((i) => i.status != 'paid' && !i.invoiceType.contains('payment')).toList();
-        
-        // Defensive fix: Ensure selected invoice still exists in the pending list.
-        // If not (e.g. it was just paid or list refreshed), clear the selection.
-        if (_selectedInvoiceId != null && !pending.any((i) => i.id == _selectedInvoiceId)) {
+        final pending = list
+            .where((i) =>
+                i.status != 'paid' &&
+                i.status != 'cancelled' &&
+                !i.invoiceType.contains('payment') &&
+                !i.invoiceType.contains('receipt'))
+            .toList();
+
+        // ─── KEY FIX ────────────────────────────────────────────────────────
+        // Resolve the safe value for the DropdownButton synchronously,
+        // BEFORE building it. If the stored ID is gone from this party's
+        // pending list, treat it as null so the widget never asserts.
+        final bool selectedIsValid =
+            _selectedInvoiceId != null && pending.any((i) => i.id == _selectedInvoiceId);
+        final int? effectiveId = selectedIsValid ? _selectedInvoiceId : null;
+
+        // Schedule the state cleanup for next frame (safe: effectiveId already null above,
+        // the dropdown won't crash, and the cleanup keeps _selectedInvoiceId in sync).
+        if (!selectedIsValid && _selectedInvoiceId != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) setState(() => _selectedInvoiceId = null);
           });
         }
+        // ────────────────────────────────────────────────────────────────────
 
-        if (pending.isEmpty) return const Text('No pending bills for this party.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic));
+        if (pending.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.grey, size: 18),
+                SizedBox(width: 8),
+                Expanded(child: Text('No pending bills for this party.', style: TextStyle(color: Colors.grey))),
+              ],
+            ),
+          );
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Select Bill to Pay (Required)', 
+            const Text('Select Bill to Pay (Required)',
                 style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.danger)),
             const SizedBox(height: 4),
-            const Text(
-              'You must select which bill this payment applies to.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
+            const Text('You must select which bill this payment applies to.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             DropdownButtonFormField<int>(
-              value: _selectedInvoiceId,
+              value: effectiveId,              // ← safe value, never causes assertion
               isExpanded: true,
               hint: const Text('Select bill...'),
               validator: (v) {
                 if (_partyType != 'supplier' && v == null) return 'Please select a bill';
                 return null;
               },
-              items: pending.map((i) => DropdownMenuItem(
-                value: i.id,
-                child: Text('${i.invoiceNumber} — Rem: ${CurrencyFormatter.formatPaisa(i.amountRemaining)}'),
-              )).toList(),
+              items: pending
+                  .map((i) => DropdownMenuItem(
+                        value: i.id,
+                        child: Text(
+                          '${i.invoiceNumber} — Rem: ${CurrencyFormatter.formatPaisa(i.amountRemaining)}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ))
+                  .toList(),
               onChanged: (v) => setState(() {
                 _selectedInvoiceId = v;
                 if (v != null) {
                   final inv = pending.firstWhere((i) => i.id == v);
-                  _amountController.text = 
+                  _amountController.text =
                       Money.fromPaisa(inv.amountRemaining).toDouble().toStringAsFixed(0);
                   
                   // Auto-toggle direction based on invoice type
@@ -258,16 +347,18 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               }),
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
-                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: AppColors.primary, width: 2)),
-                errorBorder: const OutlineInputBorder(borderSide: BorderSide(color: AppColors.danger)),
+                focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary, width: 2)),
+                errorBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.danger)),
                 filled: true,
                 fillColor: AppColors.primary.withOpacity(0.04),
               ),
             ),
-            if (_selectedInvoiceId != null) ...[
+            if (effectiveId != null) ...[
               const SizedBox(height: 8),
               Builder(builder: (ctx) {
-                final inv = pending.firstWhere((i) => i.id == _selectedInvoiceId);
+                final inv = pending.firstWhere((i) => i.id == effectiveId);
                 return Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -289,7 +380,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         );
       },
       loading: () => const LinearProgressIndicator(),
-      error: (e, _) => Text('Error: $e'),
+      error: (e, _) => Text('Error loading bills: $e'),
     );
   }
 
@@ -390,11 +481,15 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         partyType: _partyType,
       );
 
+      // After successful save, invalidate dashboard so it reflects new data immediately.
+      ref.invalidate(dashboardProvider);
+      ref.invalidate(lowStockItemsProvider);
+
       if (mounted) {
         if (_selectedInvoiceId != null) {
           ref.invalidate(invoiceByIdProvider(_selectedInvoiceId!));
-          // Correct invalidation for invoicesByPartyProvider
-          ref.invalidate(invoicesByPartyProvider); 
+          // Correct invalidation for invoicesByPartyProvider family
+          ref.invalidate(invoicesByPartyProvider((_partyType, _selectedPartyId!)));
         }
         ref.invalidate(dashboardProvider);
         if (_partyType == 'customer') {

@@ -221,13 +221,31 @@ class InvoicePdfService {
         if (invoice.notes != null) ...[
           pw.SizedBox(height: 12),
           pw.Text('Notes:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-          pw.Text(invoice.notes!, style: const pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic)),
+          pw.Text(invoice.notes!, style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic)),
         ],
 
         pw.Spacer(),
-        pw.Center(
-          child: pw.Text('This is a computer generated receipt.', 
-            style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic)),
+        pw.Column(
+          children: [
+            pw.Divider(),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'Thank you for your business!',
+                  style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                ),
+                pw.Text(
+                  'Powered by Basit Ghani',
+                  style: pw.TextStyle(
+                    fontSize: 9,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.blueGrey700,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     );

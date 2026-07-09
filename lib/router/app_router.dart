@@ -19,6 +19,7 @@ import 'package:sentery_app/features/suppliers/screens/add_edit_supplier_screen.
 import 'package:sentery_app/features/settings/screens/settings_screen.dart';
 import 'package:sentery_app/features/settings/screens/shop_profile_screen.dart';
 import 'package:sentery_app/features/settings/screens/audit_log_screen.dart';
+import 'package:sentery_app/features/items/screens/category_management_screen.dart';
 import 'package:sentery_app/features/backup/screens/backup_screen.dart';
 import 'package:sentery_app/features/returns/screens/create_return_screen.dart';
 import 'package:sentery_app/features/reports/screens/monthly_report_screen.dart';
@@ -144,6 +145,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
       GoRoute(path: '/settings/shop-profile', builder: (c, s) => const ShopProfileScreen()),
       GoRoute(path: '/settings/audit-logs', builder: (c, s) => const AuditLogScreen()),
+      GoRoute(path: '/settings/categories', builder: (c, s) => const CategoryManagementScreen()),
       GoRoute(path: '/backup', builder: (c, s) => const BackupScreen()),
     ],
   );

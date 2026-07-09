@@ -38,39 +38,65 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
   Future<double> getTodaySales() async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final result = await (select(invoices)
+    
+    // Total Sales
+    final sales = await (select(invoices)
           ..where((t) => t.invoiceDate.isBiggerOrEqualValue(today) & t.invoiceType.like('sale_%')))
         .get();
+    
+    // Total Returns (from customers/wholesalers)
+    final returns = await (select(invoices)
+          ..where((t) => 
+              t.invoiceDate.isBiggerOrEqualValue(today) & 
+              (t.invoiceType.equals('return_customer') | t.invoiceType.equals('return_wholesaler'))))
+        .get();
+
     int totalPaisa = 0;
-    for (final i in result) {
-      totalPaisa += i.totalAmount;
-    }
+    for (final i in sales) totalPaisa += i.totalAmount;
+    for (final i in returns) totalPaisa -= i.totalAmount; // Subtract returns for Net Sales
+
     return Money.fromPaisa(totalPaisa).toDouble();
   }
 
   Future<double> getMonthSales() async {
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final result = await (select(invoices)
+    
+    final sales = await (select(invoices)
           ..where((t) => t.invoiceDate.isBiggerOrEqualValue(firstDayOfMonth) & t.invoiceType.like('sale_%')))
         .get();
+
+    final returns = await (select(invoices)
+          ..where((t) => 
+              t.invoiceDate.isBiggerOrEqualValue(firstDayOfMonth) & 
+              (t.invoiceType.equals('return_customer') | t.invoiceType.equals('return_wholesaler'))))
+        .get();
+
     int totalPaisa = 0;
-    for (final i in result) {
-      totalPaisa += i.totalAmount;
-    }
+    for (final i in sales) totalPaisa += i.totalAmount;
+    for (final i in returns) totalPaisa -= i.totalAmount;
+
     return Money.fromPaisa(totalPaisa).toDouble();
   }
 
   Future<double> getYearSales() async {
     final now = DateTime.now();
     final firstDayOfYear = DateTime(now.year, 1, 1);
-    final result = await (select(invoices)
+    
+    final sales = await (select(invoices)
           ..where((t) => t.invoiceDate.isBiggerOrEqualValue(firstDayOfYear) & t.invoiceType.like('sale_%')))
         .get();
+
+    final returns = await (select(invoices)
+          ..where((t) => 
+              t.invoiceDate.isBiggerOrEqualValue(firstDayOfYear) & 
+              (t.invoiceType.equals('return_customer') | t.invoiceType.equals('return_wholesaler'))))
+        .get();
+
     int totalPaisa = 0;
-    for (final i in result) {
-      totalPaisa += i.totalAmount;
-    }
+    for (final i in sales) totalPaisa += i.totalAmount;
+    for (final i in returns) totalPaisa -= i.totalAmount;
+
     return Money.fromPaisa(totalPaisa).toDouble();
   }
 
@@ -86,12 +112,29 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
     for (final sale in sales) {
       final items = await (select(invoiceItems)..where((t) => t.invoiceId.equals(sale.id))).get();
       for (final item in items) {
-        final revenue = item.lineTotal;
-        final cost = Money.fromPaisa(item.costPriceAtSale).multiplyByDouble(item.quantity).paisa;
-        profitPaisa += (revenue - cost);
+        profitPaisa += item.lineProfit;
       }
       profitPaisa -= sale.discountAmount;
     }
+
+    // Subtract loss from customer returns
+    final returns = await (select(invoices)
+          ..where((t) => 
+              t.invoiceDate.isBiggerOrEqualValue(firstDayOfMonth) & 
+              (t.invoiceType.equals('return_customer') | t.invoiceType.equals('return_wholesaler'))))
+        .get();
+
+    for (final ret in returns) {
+      final items = await (select(invoiceItems)..where((t) => t.invoiceId.equals(ret.id))).get();
+      for (final item in items) {
+        // Profit lost = current sale price - original cost
+        // We record costPriceAtSale in return items too.
+        final revenue = item.lineTotal;
+        final cost = Money.fromPaisa(item.costPriceAtSale).multiplyByDouble(item.quantity).paisa;
+        profitPaisa -= (revenue - cost);
+      }
+    }
+
     return Money.fromPaisa(profitPaisa).toDouble();
   }
 

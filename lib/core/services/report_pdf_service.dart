@@ -202,8 +202,17 @@ class ReportPdfService {
             ]).toList(),
           ),
         ],
-        footer: (context) => pw.Center(
-          child: pw.Text('Page ${context.pageNumber} of ${context.pagesCount}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        footer: (context) => pw.Column(
+          children: [
+            pw.Divider(),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('Page ${context.pageNumber} of ${context.pagesCount}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                pw.Text('Powered by Basit Ghani', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey700)),
+              ],
+            ),
+          ],
         ),
       ),
     );

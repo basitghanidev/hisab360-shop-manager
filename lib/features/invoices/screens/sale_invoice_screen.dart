@@ -9,6 +9,8 @@ import 'package:sentery_app/core/database/app_database.dart';
 import 'package:sentery_app/core/utils/currency_formatter.dart';
 import 'package:sentery_app/core/utils/money_utils.dart';
 import 'package:sentery_app/features/invoices/providers/invoice_provider.dart';
+import 'package:sentery_app/core/database/daos/item_dao.dart';
+import 'package:sentery_app/features/dashboard/providers/dashboard_provider.dart';
 import 'package:sentery_app/features/customers/providers/customer_provider.dart';
 import 'package:sentery_app/features/wholesalers/providers/wholesaler_provider.dart';
 import 'package:sentery_app/core/widgets/app_card.dart';
@@ -751,6 +753,9 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
       ref.read(invoiceDraftItemsProvider.notifier).state = [];
       await ref.read(draftServiceProvider).clearSaleDraft();
       
+      // After successful save, invalidate dashboard so it reflects new data immediately.
+      ref.invalidate(dashboardProvider);
+
       if (mounted) {
         // Direct action after save: preview/print bill immediately as requested.
         await InvoicePdfService(ref.read(databaseProvider)).previewInvoice(id);
@@ -759,9 +764,24 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving: $e')));
+      if (mounted) {
+        if (e is InsufficientStockException) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Cannot save: ${e.itemName} has only '
+                '${e.available.toStringAsFixed(0)} units available.',
+              ),
+              backgroundColor: AppColors.danger,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving: $e')));
+        }
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

@@ -8,6 +8,7 @@ import 'package:sentery_app/core/widgets/app_card.dart';
 import 'package:sentery_app/core/widgets/bilingual_label.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:sentery_app/core/database/app_database.dart';
+import 'package:sentery_app/features/items/providers/item_provider.dart';
 import 'package:sentery_app/features/settings/providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -40,6 +41,16 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            _buildSection('Item Management'),
+            AppCard(
+              child: _buildTile(
+                Icons.category_outlined,
+                'Manage Categories',
+                'Add or remove item categories',
+                () => context.push('/settings/categories'),
+              ),
+            ),
+            const SizedBox(height: 16),
             _buildSection('Business Identity'),
             AppCard(
               child: _buildTile(
@@ -68,10 +79,35 @@ class SettingsScreen extends ConsumerWidget {
             Center(
               child: Column(
                 children: [
-                  const Text('SENTERY POS v1.1.0', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1)),
-                  const Text('Designed for Professional Retailers', style: AppTextStyles.caption),
+                  Text(
+                    'Hisab360 - Shop Manager',
+                    style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('Version 1.1.0', style: AppTextStyles.caption),
                   const SizedBox(height: 8),
-                  Text('Powered & Designed by Basit Ghani', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.textSecondary)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.code, size: 14, color: AppColors.primary),
+                        SizedBox(width: 6),
+                        Text(
+                          'Powered by Basit Ghani',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

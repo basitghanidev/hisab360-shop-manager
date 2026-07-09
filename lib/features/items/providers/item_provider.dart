@@ -42,6 +42,18 @@ class ItemRepository {
   Stream<List<ItemCategory>> watchCategories() => _dao.watchCategories();
   Stream<List<UnitType>> watchUnitTypes() => _dao.watchUnitTypes();
 
+  Future<int> addCategory(ItemCategoriesCompanion category) async {
+    final id = await _dao.insertCategory(category);
+    await _audit.logAction(action: 'create', table: 'item_categories', recordId: id, newData: {'name': category.name.value});
+    return id;
+  }
+
+  Future<int> deleteCategory(int id) async {
+    final result = await _dao.deleteCategory(id);
+    await _audit.logAction(action: 'delete', table: 'item_categories', recordId: id);
+    return result;
+  }
+
   Future<void> addStockBatch({
     required int itemId,
     int? supplierId,
