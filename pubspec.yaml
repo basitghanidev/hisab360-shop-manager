@@ -1,8 +1,8 @@
 name: sentery_app
-description: Shop Management — Professional local shop POS for Pakistan
+description: Hisab360 — Professional local shop POS for Pakistan
 
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -68,21 +68,23 @@ dev_dependencies:
   build_runner: ^2.4.12
   riverpod_generator: ^2.4.3
   msix: ^3.16.7
-
-msix_config:
-  display_name: Hisab360
-  publisher_display_name: Basit Ghani
-  publisher: CN=BasitGhani, O=BasitGhani, C=PK
-  identity_name: com.basitghani.hisab360
-  msix_version: 1.1.0.0
-  logo_path: assets/images/app_logo.png
-  capabilities: internetClient, location, microphone, webcam
   
   # === TESTING ===
   mockito: ^5.4.4
   integration_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+msix_config:
+  display_name: Hisab360
+  publisher_display_name: Basit Ghani
+  publisher: CN=BasitGhani, O=Hisab360, C=PK
+  identity_name: com.hisab360.pos
+  msix_version: 1.1.0.0
+  # Automatically try to install the certificate to avoid 0x80070005
+  install_certificate: true
+  # Only necessary capabilities
+  capabilities: internetClient
 
 flutter:
   uses-material-design: true
