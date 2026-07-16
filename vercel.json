@@ -1,11 +1,13 @@
 {
   "version": 2,
-  "name": "hisab360-shop-manager",
+  "framework": null,
   "builds": [
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "build/web" }
+      "config": {
+        "distDir": "build/web"
+      }
     }
   ],
   "routes": [
