@@ -2,6 +2,6 @@
   "name": "hisab360-shop-manager",
   "version": "1.1.0",
   "scripts": {
-    "build": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter build web --release"
+    "build": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter build web --release --no-pub"
   }
 }
