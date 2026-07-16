@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\My code\possystem\windows\flutter\ephemeral\.plugin_symlinks\share_plus\windows\share_plus_plugin_c_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\My code\possystem\windows\flutter\ephemeral\.plugin_symlinks\share_plus\windows\share_plus_plugin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\My code\possystem\windows\flutter\ephemeral\.plugin_symlinks\share_plus\windows\include\share_plus\share_plus_windows_plugin_c_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\My code\possystem\windows\flutter\ephemeral\.plugin_symlinks\share_plus\windows\share_plus_windows_plugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\My code\possystem\windows\flutter\ephemeral\.plugin_symlinks\share_plus\windows\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{936D4EC2-6E4C-3C23-A886-0DB7F423B200}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{39DC3EA1-44C2-37C7-AB0E-B035ABFECE18}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -39,7 +39,7 @@
 **/.pub-cache/
 **/.pub/
 **/.dart_tool/
-build/
+# build/
 linux/flutter/ephemeral/
 macos/flutter/ephemeral/
 windows/flutter/ephemeral/

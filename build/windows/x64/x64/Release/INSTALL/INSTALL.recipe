@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\x64\Release\ZERO_CHECK</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\flutter\x64\Release\flutter_assemble</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\connectivity_plus\Release\connectivity_plus_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\file_saver\Release\file_saver_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\jni\shared\Release\dartjni.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\printing\Release\printing_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\screen_retriever_windows\Release\screen_retriever_windows_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\share_plus\Release\share_plus_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\sqlite3_flutter_libs\Release\sqlite3.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\sqlite3_flutter_libs\Release\sqlite3_flutter_libs_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\url_launcher_windows\Release\url_launcher_windows_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\plugins\window_manager\Release\window_manager_plugin.dll</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\runner\Release\possystem.exe</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\x64\Release\ALL_BUILD</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
+      <FullPath>D:\My code\possystem\build\windows\x64\x64\Release\INSTALL</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles />
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>
