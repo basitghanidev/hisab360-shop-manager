@@ -124,6 +124,14 @@ class MonthlyReportScreen extends ConsumerWidget {
                     ],
                   ),
                   _CollapsibleSection(
+                    title: 'Expenses Detail',
+                    children: [
+                      _DataRow('Shop Overhead', report.totalExpenses, color: AppColors.danger),
+                      const Divider(),
+                      _DataRow('Total Expenses', report.totalExpenses, isBold: true, color: AppColors.danger),
+                    ],
+                  ),
+                  _CollapsibleSection(
                     title: 'Outstanding Balances',
                     children: [
                       _DataRow('Suppliers (We Owe)', report.supplierOutstanding, color: AppColors.danger),
@@ -198,7 +206,7 @@ class _ProfitHeroCard extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    final isProfit = report.grossProfit >= 0;
+    final isProfit = report.netProfit >= 0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -209,12 +217,15 @@ class _ProfitHeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(isProfit ? 'Profit (Faida)' : 'Loss (Nuqsan)',
+          Text(isProfit ? 'Net Profit (Saaf Faida)' : 'Net Loss (Nuqsan)',
               style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(CurrencyFormatter.format(report.grossProfit.abs()),
+          Text(CurrencyFormatter.format(report.netProfit.abs()),
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold,
                   color: isProfit ? AppColors.success : AppColors.danger)),
+          const SizedBox(height: 4),
+          Text('Gross Profit: ${CurrencyFormatter.format(report.grossProfit)}',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ],
       ),
     );

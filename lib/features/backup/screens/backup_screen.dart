@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -35,6 +37,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   Future<void> _loadPersistedState() async {
+    final isDesktop = !kIsWeb && Platform.isWindows;
+    if (isDesktop) return; // Google Sign-in not supported on Windows
+
     final service = ref.read(googleDriveServiceProvider);
     final email = await service.persistedEmail;
     final name = await service.persistedName;
@@ -56,6 +61,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = !kIsWeb && Platform.isWindows;
+
     return Scaffold(
       appBar: AppBar(
         title: const BilingualLabel(
@@ -71,8 +78,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDriveSection(),
-                const SizedBox(height: 16),
+                if (!isDesktop) ...[
+                  _buildDriveSection(),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  _buildDesktopCloudBanner(),
+                  const SizedBox(height: 16),
+                ],
                 _buildManualExportCard(),
                 const SizedBox(height: 16),
                 _buildRestoreCard(),
@@ -132,8 +144,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
               child: const Text(
-                'Connect your Google account to back up your shop data to Google Drive — '
-                'just like WhatsApp.',
+                'Connect your Google account to back up your shop data to Google Drive.',
                 style: TextStyle(fontSize: 13, color: Colors.black87),
               ),
             ),
@@ -250,7 +261,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Export your shop data as a JSON file to share via WhatsApp or Email.', style: AppTextStyles.caption),
+          const Text('Export your shop data as a JSON file to share via Email.', style: AppTextStyles.caption),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -298,6 +309,30 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopCloudBanner() {
+    return AppCard(
+      color: Colors.blue.shade50,
+      child: Column(
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.cloud_off, color: Colors.blue, size: 28),
+              SizedBox(width: 10),
+              Text('Cloud Sync (Mobile Only)', style: AppTextStyles.cardTitle),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Google Drive Cloud Sync is currently optimized for mobile phones.\n\n'
+            'For your laptop, please use "Manual Backup" to save data and '
+            '"Restore from File" to move it between devices.',
+            style: TextStyle(fontSize: 13, color: Colors.black87),
           ),
         ],
       ),

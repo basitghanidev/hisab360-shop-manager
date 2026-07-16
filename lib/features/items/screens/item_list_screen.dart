@@ -271,6 +271,15 @@ class ItemListScreen extends ConsumerWidget {
               await ItemExportService(db).exportToCsv();
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            title: const Text('PDF Report (Print)'),
+            onTap: () async {
+              Navigator.pop(ctx);
+              final db = ref.read(databaseProvider);
+              await ItemExportService(db).exportToPdf();
+            },
+          ),
           const SizedBox(height: 16),
         ],
       ),

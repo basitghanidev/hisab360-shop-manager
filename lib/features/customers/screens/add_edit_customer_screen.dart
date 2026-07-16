@@ -36,7 +36,7 @@ class _AddEditCustomerScreenState extends ConsumerState<AddEditCustomerScreen> {
     _phoneController = TextEditingController();
     _emailController = TextEditingController();
     _addressController = TextEditingController();
-    _openingBalanceController = TextEditingController(text: '0');
+    _openingBalanceController = TextEditingController();
 
     if (widget.id != null) {
       _loadCustomer();

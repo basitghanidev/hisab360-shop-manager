@@ -21,7 +21,7 @@ class PaymentMethodSelector extends StatefulWidget {
 
 class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
   String _selectedMethod = 'cash';
-  final _amountController = TextEditingController(text: '0');
+  final _amountController = TextEditingController();
   final _transactionIdController = TextEditingController();
   final _phoneController = TextEditingController();
   final _bankNameController = TextEditingController();

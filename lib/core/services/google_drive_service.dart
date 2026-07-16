@@ -10,9 +10,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Architecture: sign-in → get Drive API → find/create folder → upload/download file.
 class GoogleDriveService {
   // Drive file scope: only access files this app creates.
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [drive.DriveApi.driveFileScope],
-  );
+  GoogleSignIn? _googleSignInInstance;
+
+  GoogleSignIn get _googleSignIn {
+    _googleSignInInstance ??= GoogleSignIn(
+      scopes: [drive.DriveApi.driveFileScope],
+    );
+    return _googleSignInInstance!;
+  }
 
   static const String _prefAccountEmail = 'google_drive_account_email';
   static const String _prefAccountName = 'google_drive_account_name';

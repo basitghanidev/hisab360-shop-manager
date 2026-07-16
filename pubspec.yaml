@@ -47,6 +47,8 @@ dependencies:
   http: ^1.2.1
   excel: ^4.0.5
   csv: ^6.0.0
+  window_manager: ^0.4.3
+  file_saver: ^0.2.10
   
   # === UTILITIES ===
   intl: ^0.20.2
@@ -76,14 +78,15 @@ dev_dependencies:
   flutter_lints: ^4.0.0
 
 msix_config:
-  display_name: Hisab360
-  publisher_display_name: Basit Ghani
-  publisher: CN=BasitGhani, O=Hisab360, C=PK
-  identity_name: com.hisab360.pos
-  msix_version: 1.1.0.0
-  # Automatically try to install the certificate to avoid 0x80070005
-  install_certificate: true
-  # Only necessary capabilities
+  display_name: "Hisab360"
+  publisher_display_name: "Basit Ghani"
+  publisher: "CN=Basit Ghani, O=Basit Ghani, C=PK"
+  identity_name: "com.basitghani.hisab360.pos"
+  msix_version: "1.1.0.0"
+  logo_path: assets/images/app_logo.png
+  install_certificate: false
+  store: false
+  output_name: "Hisab360_Professional_Setup"
   capabilities: internetClient
 
 flutter:

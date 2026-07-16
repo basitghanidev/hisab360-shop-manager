@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -14,112 +15,117 @@ class InvoicePdfService {
   InvoicePdfService(this.db);
 
   Future<Uint8List> generateInvoicePdf(int invoiceId) async {
-    final invoice = await db.invoiceDao.getInvoiceById(invoiceId);
-    if (invoice == null) throw Exception('Invoice not found');
-    final items = await db.invoiceDao.getInvoiceItems(invoiceId);
-    
-    final settings = await db.settingsDao.getSettings();
-    final pageSize = settings?.pdfPageSize ?? 'A4';
+    try {
+      final invoice = await db.invoiceDao.getInvoiceById(invoiceId);
+      if (invoice == null) throw Exception('Invoice not found');
+      final items = await db.invoiceDao.getInvoiceItems(invoiceId);
+      
+      final settings = await db.settingsDao.getSettings();
+      final pageSize = settings?.pdfPageSize ?? 'A4';
 
-    String partyName = invoice.partyNameSnapshot ?? AppStrings.walkInCustomer;
-    String partyType = invoice.partyTypeSnapshot ?? AppStrings.customer;
+      String partyName = invoice.partyNameSnapshot ?? AppStrings.walkInCustomer;
+      String partyType = invoice.partyTypeSnapshot ?? AppStrings.customer;
 
-    final pdf = pw.Document();
+      final pdf = pw.Document();
 
-    final pageFormat = _getPageFormat(pageSize);
+      final pageFormat = _getPageFormat(pageSize);
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: pageFormat,
-        margin: pageSize == 'A4' ? const pw.EdgeInsets.all(32) : const pw.EdgeInsets.all(8),
-        build: (pw.Context context) {
-          if (invoice.invoiceType.contains('_payment_receipt')) {
-            return _buildReceiptPdfContent(invoice, partyName, partyType, pageSize);
-          }
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Center(
-                child: pw.Column(
+      pdf.addPage(
+        pw.Page(
+          pageFormat: pageFormat,
+          margin: pageSize == 'A4' ? const pw.EdgeInsets.all(32) : const pw.EdgeInsets.all(8),
+          build: (pw.Context context) {
+            if (invoice.invoiceType.contains('_payment_receipt')) {
+              return _buildReceiptPdfContent(invoice, partyName, partyType, pageSize);
+            }
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Center(
+                  child: pw.Column(
+                    children: [
+                      pw.Text(AppStrings.appName, style: pw.TextStyle(fontSize: pageSize == 'A4' ? 24 : 18, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Professional Shop Management', style: pw.TextStyle(fontSize: pageSize == 'A4' ? 12 : 9)),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(height: pageSize == 'A4' ? 24 : 12),
+                
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text(AppStrings.appName, style: pw.TextStyle(fontSize: pageSize == 'A4' ? 24 : 18, fontWeight: pw.FontWeight.bold)),
-                    pw.Text('Professional Shop Management', style: pw.TextStyle(fontSize: pageSize == 'A4' ? 12 : 9)),
+                    pw.Text('Invoice #: ${invoice.invoiceNumber}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                    pw.Text('Date: ${invoice.invoiceDate.toString().split(' ')[0]}', style: const pw.TextStyle(fontSize: 10)),
                   ],
                 ),
-              ),
-              pw.SizedBox(height: pageSize == 'A4' ? 24 : 12),
-              
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Invoice #: ${invoice.invoiceNumber}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                  pw.Text('Date: ${invoice.invoiceDate.toString().split(' ')[0]}', style: const pw.TextStyle(fontSize: 10)),
-                ],
-              ),
-              pw.SizedBox(height: 8),
+                pw.SizedBox(height: 8),
 
-              pw.Text('Bill To: $partyName', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
-              pw.Text('Type: $partyType', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
-              
-              pw.SizedBox(height: 12),
-              pw.Divider(thickness: 1),
-
-              pw.TableHelper.fromTextArray(
-                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: pageSize == 'A4' ? 10 : 8),
-                cellStyle: pw.TextStyle(fontSize: pageSize == 'A4' ? 9 : 7),
-                headers: pageSize == 'A4' ? ['#', 'Item Name', 'Qty', 'Rate', 'Total'] : ['Item', 'Qty', 'Rate', 'Total'],
-                data: List.generate(items.length, (index) {
-                  final i = items[index];
-                  final row = [
-                    i.itemNameSnapshot,
-                    '${i.quantity} ${i.unitTypeSnapshot}',
-                    CurrencyFormatter.formatPaisa(i.salePrice),
-                    CurrencyFormatter.formatPaisa(i.lineTotal),
-                  ];
-                  if (pageSize == 'A4') {
-                    row.insert(0, (index + 1).toString());
-                  }
-                  return row;
-                }),
-              ),
-              pw.Divider(thickness: 1),
-
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.end,
-                children: [
-                  pw.Container(
-                    width: pageSize == 'A4' ? 200 : 160,
-                    child: pw.Column(
-                      children: [
-                        _buildSummaryRow(AppStrings.previousBalance, invoice.previousBalance, fontSize: pageSize == 'A4' ? 10 : 8),
-                        _buildSummaryRow(AppStrings.newBill, invoice.totalAmount, fontSize: pageSize == 'A4' ? 10 : 8),
-                        _buildSummaryRow(AppStrings.paidToday, invoice.amountPaid, fontSize: pageSize == 'A4' ? 10 : 8),
-                        pw.Divider(thickness: 0.5),
-                        _buildSummaryRow(AppStrings.totalRemaining, invoice.totalBalanceAfter, isBold: true, fontSize: pageSize == 'A4' ? 11 : 9),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              
-              if (invoice.notes != null) ...[
+                pw.Text('Bill To: $partyName', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
+                pw.Text('Type: $partyType', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+                
                 pw.SizedBox(height: 12),
-                pw.Text('Notes:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-                pw.Text(invoice.notes!, style: const pw.TextStyle(fontSize: 8)),
+                pw.Divider(thickness: 1),
+
+                pw.TableHelper.fromTextArray(
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: pageSize == 'A4' ? 10 : 8),
+                  cellStyle: pw.TextStyle(fontSize: pageSize == 'A4' ? 9 : 7),
+                  headers: pageSize == 'A4' ? ['#', 'Item Name', 'Qty', 'Rate', 'Total'] : ['Item', 'Qty', 'Rate', 'Total'],
+                  data: List.generate(items.length, (index) {
+                    final i = items[index];
+                    final row = [
+                      i.itemNameSnapshot,
+                      '${i.quantity} ${i.unitTypeSnapshot}',
+                      CurrencyFormatter.formatPaisa(i.salePrice),
+                      CurrencyFormatter.formatPaisa(i.lineTotal),
+                    ];
+                    if (pageSize == 'A4') {
+                      row.insert(0, (index + 1).toString());
+                    }
+                    return row;
+                  }),
+                ),
+                pw.Divider(thickness: 1),
+
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                  children: [
+                    pw.Container(
+                      width: pageSize == 'A4' ? 200 : 160,
+                      child: pw.Column(
+                        children: [
+                          _buildSummaryRow(AppStrings.previousBalance, invoice.previousBalance, fontSize: pageSize == 'A4' ? 10 : 8),
+                          _buildSummaryRow(AppStrings.newBill, invoice.totalAmount, fontSize: pageSize == 'A4' ? 10 : 8),
+                          _buildSummaryRow(AppStrings.paidToday, invoice.amountPaid, fontSize: pageSize == 'A4' ? 10 : 8),
+                          pw.Divider(thickness: 0.5),
+                          _buildSummaryRow(AppStrings.totalRemaining, invoice.totalBalanceAfter, isBold: true, fontSize: pageSize == 'A4' ? 11 : 9),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                if (invoice.notes != null) ...[
+                  pw.SizedBox(height: 12),
+                  pw.Text('Notes:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                  pw.Text(invoice.notes!, style: const pw.TextStyle(fontSize: 8)),
+                ],
+
+                pw.SizedBox(height: 20),
+                pw.Center(
+                  child: pw.Text('Thank you for your business!', 
+                    style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic)),
+                ),
               ],
+            );
+          },
+        ),
+      );
 
-              pw.SizedBox(height: 20),
-              pw.Center(
-                child: pw.Text('Thank you for your business!', 
-                  style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic)),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    return pdf.save();
+      return pdf.save();
+    } catch (e) {
+      debugPrint('[PDF] Critical error during generation: $e');
+      rethrow;
+    }
   }
 
   PdfPageFormat _getPageFormat(String pageSize) {

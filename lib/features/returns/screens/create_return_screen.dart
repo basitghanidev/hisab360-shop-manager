@@ -31,7 +31,7 @@ class _CreateReturnScreenState extends ConsumerState<CreateReturnScreen> {
   int? _selectedWholesalerId;
   int? _selectedCustomerId;
   int? _selectedInvoiceId;
-  final _amountPaidController = TextEditingController(text: '0');
+  final _amountPaidController = TextEditingController();
   String _paymentMethod = 'cash';
   
   final List<ReturnItemDraft> _returnItems = [];

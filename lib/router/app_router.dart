@@ -38,49 +38,81 @@ import 'package:sentery_app/features/wholesalers/screens/wholesaler_list_screen.
 import 'package:sentery_app/features/wholesalers/screens/wholesaler_detail_screen.dart';
 import 'package:sentery_app/features/wholesalers/screens/add_edit_wholesaler_screen.dart';
 import 'package:sentery_app/features/wholesalers/screens/wholesaler_prices_screen.dart';
-import 'package:sentery_app/features/payments/screens/record_payment_screen.dart';
+import 'package:sentery_app/features/people/screens/add_ledger_entry_screen.dart';
+import 'package:sentery_app/features/expenses/screens/expense_list_screen.dart';
+import 'package:sentery_app/features/expenses/screens/add_expense_screen.dart';
 
-// Placeholder screens (to be implemented)
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen(this.title, {super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(title)), body: Center(child: Text(title)));
-}
+import 'package:sentery_app/features/settings/screens/expense_category_management_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
     routes: [
-      // Main shell with tab bar
+      // Main shell with adaptive navigation
       ShellRoute(
-        builder: (context, state, child) => Scaffold(
-          body: child,
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _calculateSelectedIndex(state.fullPath ?? '/home'),
-            onTap: (index) => _onItemTapped(index, context),
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: AppColors.surface, // Better contrast
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.textSecondary, // Fixed white icons issue
-            showUnselectedLabels: true,
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), activeIcon: Icon(Icons.account_balance_wallet), label: 'Hisab'),
-              BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), activeIcon: Icon(Icons.inventory_2), label: 'Items'),
-              BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'People'),
-              BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), activeIcon: Icon(Icons.bar_chart), label: 'Reports'),
-            ],
-          ),
-        ),
+        builder: (context, state, child) {
+          final isDesktop = MediaQuery.of(context).size.width > 900;
+          final selectedIndex = _calculateSelectedIndex(state.fullPath ?? '/home');
+
+          if (isDesktop) {
+            return Scaffold(
+              body: Row(
+                children: [
+                  NavigationRail(
+                    selectedIndex: selectedIndex,
+                    onDestinationSelected: (index) => _onItemTapped(index, context),
+                    labelType: NavigationRailLabelType.all,
+                    backgroundColor: AppColors.surface,
+                    selectedIconTheme: const IconThemeData(color: AppColors.primary),
+                    unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
+                    selectedLabelTextStyle: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                    unselectedLabelTextStyle: const TextStyle(color: AppColors.textSecondary),
+                    destinations: const [
+                      NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Home')),
+                      NavigationRailDestination(icon: Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet), label: Text('Hisab')),
+                      NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: Text('Items')),
+                      NavigationRailDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: Text('People')),
+                      NavigationRailDestination(icon: Icon(Icons.outbond_outlined), selectedIcon: Icon(Icons.outbond), label: Text('Expenses')),
+                    ],
+                  ),
+                  const VerticalDivider(thickness: 1, width: 1),
+                  Expanded(child: child),
+                ],
+              ),
+            );
+          }
+
+          return Scaffold(
+            body: child,
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: selectedIndex,
+              onTap: (index) => _onItemTapped(index, context),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: AppColors.surface,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSecondary,
+              showUnselectedLabels: true,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), activeIcon: Icon(Icons.account_balance_wallet), label: 'Hisab'),
+                BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), activeIcon: Icon(Icons.inventory_2), label: 'Items'),
+                BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'People'),
+                BottomNavigationBarItem(icon: Icon(Icons.outbond_outlined), activeIcon: Icon(Icons.outbond), label: 'Expenses'),
+              ],
+            ),
+          );
+        },
         routes: [
           GoRoute(path: '/home', builder: (c, s) => const HomeScreen()),
           GoRoute(path: '/hisab', builder: (c, s) => const HisabKitabScreen()),
           GoRoute(path: '/items', builder: (c, s) => const ItemListScreen()),
           GoRoute(path: '/people', builder: (c, s) => const PeopleScreen()),
-          GoRoute(path: '/reports', builder: (c, s) => const ReportsHomeScreen()),
+          GoRoute(path: '/expenses', builder: (c, s) => const ExpenseListScreen()),
         ],
       ),
+      
+      GoRoute(path: '/reports', builder: (c, s) => const ReportsHomeScreen()),
+      GoRoute(path: '/expenses/add', builder: (c, s) => const AddExpenseScreen()),
       
       // Supplier routes
       GoRoute(path: '/suppliers/add', builder: (c, s) => const AddEditSupplierScreen()),
@@ -120,16 +152,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         InvoiceDetailScreen(id: int.parse(s.pathParameters['id']!))),
       GoRoute(path: '/drafts', builder: (c, s) => const DraftsListScreen()),
       
-      // Return and Payment routes
+      // Return and Ledger Entry routes
       GoRoute(path: '/returns/create', builder: (c, s) => const CreateReturnScreen()),
-      GoRoute(path: '/payments/record', builder: (c, s) {
-        final partyType = s.uri.queryParameters['partyType'];
-        final partyId = s.uri.queryParameters['partyId'] != null ? int.parse(s.uri.queryParameters['partyId']!) : null;
-        final direction = s.uri.queryParameters['direction'];
-        return RecordPaymentScreen(
+      GoRoute(path: '/people/add-ledger-entry', builder: (c, s) {
+        final partyType = s.uri.queryParameters['partyType']!;
+        final partyId = int.parse(s.uri.queryParameters['partyId']!);
+        final isGave = s.uri.queryParameters['isGave'] == 'true';
+        return AddLedgerEntryScreen(
           partyType: partyType,
           partyId: partyId,
-          direction: direction,
+          isGave: isGave,
         );
       }),
       
@@ -146,6 +178,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/shop-profile', builder: (c, s) => const ShopProfileScreen()),
       GoRoute(path: '/settings/audit-logs', builder: (c, s) => const AuditLogScreen()),
       GoRoute(path: '/settings/categories', builder: (c, s) => const CategoryManagementScreen()),
+      GoRoute(path: '/settings/expense-categories', builder: (c, s) => const ExpenseCategoryManagementScreen()),
       GoRoute(path: '/backup', builder: (c, s) => const BackupScreen()),
     ],
   );
@@ -156,7 +189,7 @@ int _calculateSelectedIndex(String location) {
   if (location.startsWith('/hisab')) return 1;
   if (location.startsWith('/items')) return 2;
   if (location.startsWith('/people')) return 3;
-  if (location.startsWith('/reports')) return 4;
+  if (location.startsWith('/expenses')) return 4;
   return 0;
 }
 
@@ -166,6 +199,6 @@ void _onItemTapped(int index, BuildContext context) {
     case 1: context.go('/hisab'); break;
     case 2: context.go('/items'); break;
     case 3: context.go('/people'); break;
-    case 4: context.go('/reports'); break;
+    case 4: context.go('/expenses'); break;
   }
 }

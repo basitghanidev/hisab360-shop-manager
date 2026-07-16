@@ -43,11 +43,22 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildSection('Item Management'),
             AppCard(
-              child: _buildTile(
-                Icons.category_outlined,
-                'Manage Categories',
-                'Add or remove item categories',
-                () => context.push('/settings/categories'),
+              child: Column(
+                children: [
+                  _buildTile(
+                    Icons.category_outlined,
+                    'Manage Item Categories',
+                    'Add or remove maal ki aqsaam',
+                    () => context.push('/settings/categories'),
+                  ),
+                  const Divider(),
+                  _buildTile(
+                    Icons.outbond_outlined,
+                    'Manage Expense Categories',
+                    'Add or remove kharchay ki aqsaam',
+                    () => context.push('/settings/expense-categories'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),

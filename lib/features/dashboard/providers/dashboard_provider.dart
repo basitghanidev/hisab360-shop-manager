@@ -11,6 +11,7 @@ class DashboardData {
   final double customerOutstanding;
   final double todayReceived;
   final double todayPaid;
+  final double monthExpenses;
 
   final double supplierCredit;
   final double wholesalerCredit;
@@ -25,12 +26,15 @@ class DashboardData {
     required this.customerOutstanding,
     required this.todayReceived,
     required this.todayPaid,
+    required this.monthExpenses,
     required this.supplierCredit,
     required this.wholesalerCredit,
     required this.customerCredit,
   });
 
-  double get netKhataBalance => (wholesalerOutstanding + customerOutstanding + supplierCredit) - (supplierOutstanding + wholesalerCredit + customerCredit);
+  double get totalReceivable => wholesalerOutstanding + customerOutstanding + supplierCredit;
+  double get totalPayable => supplierOutstanding + wholesalerCredit + customerCredit;
+  double get netKhataBalance => totalReceivable - totalPayable;
 }
 
 final reportDaoProvider = Provider<ReportDao>((ref) {
@@ -48,6 +52,7 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
     customerOutstanding: await dao.getTotalCustomerBalance(),
     todayReceived: await dao.getTodayReceived(),
     todayPaid: await dao.getTodayPaid(),
+    monthExpenses: await dao.getMonthExpenses(),
     supplierCredit: await dao.getTotalSupplierCredit(),
     wholesalerCredit: await dao.getTotalWholesalerCredit(),
     customerCredit: await dao.getTotalCustomerCredit(),

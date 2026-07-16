@@ -15,7 +15,8 @@ class FullMonthlyReport {
   final double totalSales, wholesaleSales, retailSales;
   final double cashReceived, onlineReceived, creditGiven;
   final double totalPurchases, cashPaid, onlinePaid, creditTaken;
-  final double grossProfit;
+  final double totalExpenses;
+  final double grossProfit, netProfit;
   final double supplierOutstanding, wholesalerOutstanding, customerOutstanding, netOutstanding;
   final double stockValueAtCost, stockValueAtRetail;
   final double totalAssets, totalLiabilities, netShopValue;
@@ -24,16 +25,35 @@ class FullMonthlyReport {
     required this.totalSales, required this.wholesaleSales, required this.retailSales,
     required this.cashReceived, required this.onlineReceived, required this.creditGiven,
     required this.totalPurchases, required this.cashPaid, required this.onlinePaid, required this.creditTaken,
-    required this.grossProfit,
+    required this.totalExpenses,
+    required this.grossProfit, required this.netProfit,
     required this.supplierOutstanding, required this.wholesalerOutstanding, required this.customerOutstanding,
     required this.netOutstanding, required this.stockValueAtCost, required this.stockValueAtRetail,
     required this.totalAssets, required this.totalLiabilities, required this.netShopValue,
   });
 }
 
-@DriftAccessor(tables: [Invoices, InvoiceItems, Suppliers, Wholesalers, Customers, Items, Payments, LedgerEntries, StockMovements, StockBatches])
+@DriftAccessor(tables: [Invoices, InvoiceItems, Suppliers, Wholesalers, Customers, Items, Payments, LedgerEntries, StockMovements, StockBatches, Expenses])
 class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
   ReportDao(super.db);
+
+  Future<double> getTodayExpenses() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final result = await (select(expenses)..where((t) => t.date.isBiggerOrEqualValue(today))).get();
+    int totalPaisa = 0;
+    for (final e in result) totalPaisa += e.amount;
+    return Money.fromPaisa(totalPaisa).toDouble();
+  }
+
+  Future<double> getMonthExpenses() async {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final result = await (select(expenses)..where((t) => t.date.isBiggerOrEqualValue(firstDayOfMonth))).get();
+    int totalPaisa = 0;
+    for (final e in result) totalPaisa += e.amount;
+    return Money.fromPaisa(totalPaisa).toDouble();
+  }
 
   Future<double> getTodaySales() async {
     final now = DateTime.now();
@@ -142,7 +162,7 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
     final result = await (select(suppliers)..where((t) => t.isActive.equals(true))).get();
     int totalPaisa = 0;
     for (final s in result) {
-      if (s.currentBalance > 0) totalPaisa += s.currentBalance; // only what we actually owe
+      if (s.currentBalance > 0) totalPaisa += s.currentBalance;
     }
     return Money.fromPaisa(totalPaisa).toDouble();
   }
@@ -151,7 +171,7 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
     final result = await (select(wholesalers)..where((t) => t.isActive.equals(true))).get();
     int totalPaisa = 0;
     for (final w in result) {
-      if (w.currentBalance > 0) totalPaisa += w.currentBalance; // only what they actually owe us
+      if (w.currentBalance > 0) totalPaisa += w.currentBalance;
     }
     return Money.fromPaisa(totalPaisa).toDouble();
   }
@@ -160,7 +180,7 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
     final result = await (select(customers)..where((t) => t.isActive.equals(true))).get();
     int totalPaisa = 0;
     for (final c in result) {
-      if (c.currentBalance > 0) totalPaisa += c.currentBalance; // only what they actually owe us
+      if (c.currentBalance > 0) totalPaisa += c.currentBalance;
     }
     return Money.fromPaisa(totalPaisa).toDouble();
   }
@@ -315,11 +335,26 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
       grossProfitPaisa -= sale.discountAmount;
     }
 
+    final totalExp = await getMonthExpenses();
+    final totalExpPaisa = Money.fromDouble(totalExp).paisa;
+    final netProfitPaisa = grossProfitPaisa - totalExpPaisa;
+
     // --- Outstanding ---
     final supOut = await getTotalSupplierBalance();
     final whOut = await getTotalWholesalerBalance();
     final cusOut = await getTotalCustomerBalance();
-    final netOut = (whOut + cusOut) - supOut;
+    
+    // For Dashboard/Report purposes: 
+    // Receivable = Customers who owe us + Wholesalers who owe us + Supplier Advances
+    final supplierCredit = await getTotalSupplierCredit();
+    final totalReceivable = cusOut + whOut + supplierCredit;
+    
+    // Payable = Suppliers we owe + Wholesaler Advances + Customer Advances
+    final wholesalerCredit = await getTotalWholesalerCredit();
+    final customerCredit = await getTotalCustomerCredit();
+    final totalPayable = supOut + wholesalerCredit + customerCredit;
+
+    final netOut = totalReceivable - totalPayable;
 
     // --- Stock Value ---
     final allItems = await (select(items)..where((t) => t.isActive.equals(true))).get();
@@ -329,8 +364,8 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
       retValPaisa += Money.fromPaisa(item.retailPrice).multiplyByDouble(item.currentStock).paisa;
     }
 
-    final totalAssets = Money.fromPaisa(costValPaisa).toDouble() + whOut + cusOut;
-    final totalLiabilities = supOut;
+    final totalAssets = Money.fromPaisa(costValPaisa).toDouble() + totalReceivable;
+    final totalLiabilities = totalPayable;
     final netShopValue = totalAssets - totalLiabilities;
 
     return FullMonthlyReport(
@@ -344,7 +379,9 @@ class ReportDao extends DatabaseAccessor<AppDatabase> with _$ReportDaoMixin {
       cashPaid: Money.fromPaisa(cashPaidPaisa).toDouble(),
       onlinePaid: Money.fromPaisa(onlinePaidPaisa).toDouble(),
       creditTaken: Money.fromPaisa(creditTakenPaisa).toDouble(),
+      totalExpenses: totalExp,
       grossProfit: Money.fromPaisa(grossProfitPaisa).toDouble(),
+      netProfit: Money.fromPaisa(netProfitPaisa).toDouble(),
       supplierOutstanding: supOut,
       wholesalerOutstanding: whOut,
       customerOutstanding: cusOut,

@@ -36,8 +36,8 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
   bool _isNewCustomer = false;
   
   Money _previousBalance = Money.zero;
-  final _amountPaidController = TextEditingController(text: '0');
-  final _manualDiscountController = TextEditingController(text: '0');
+  final _amountPaidController = TextEditingController();
+  final _manualDiscountController = TextEditingController();
   final _notesController = TextEditingController();
   bool _showManualDiscount = false;
   DateTime _invoiceDate = DateTime.now();
@@ -434,7 +434,7 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
                       setState(() {});
                       _saveDraft();
                     },
-                      decoration: const InputDecoration(isDense: true, prefixText: 'Rs.'),
+                      decoration: const InputDecoration(isDense: true, prefixText: 'Rs.', hintText: '0'),
                     ),
                   )
                 else
@@ -468,7 +468,7 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
                 textAlign: TextAlign.end,
                 onChanged: (v) => setState(() {}),
                 style: const TextStyle(fontWeight: FontWeight.bold),
-                decoration: const InputDecoration(isDense: true, prefixText: 'Rs.'),
+                decoration: const InputDecoration(isDense: true, prefixText: 'Rs.', hintText: '0'),
               ),
             )
           else
@@ -588,7 +588,7 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
               child: ElevatedButton(
                 onPressed: (mTotal.paisa <= 0 || _isLoading) ? null : () => _saveInvoice(mTotal, mAmountPaid, mTotalBaqi),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: Text(_isLoading ? 'Saving...' : 'Save & Preview Bill', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(_isLoading ? 'Saving...' : 'Save Bill', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -757,10 +757,38 @@ class _SaleInvoiceScreenState extends ConsumerState<SaleInvoiceScreen> {
       ref.invalidate(dashboardProvider);
 
       if (mounted) {
-        // Direct action after save: preview/print bill immediately as requested.
-        await InvoicePdfService(ref.read(databaseProvider)).previewInvoice(id);
+        final result = await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogCtx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Bill Saved Successfully'),
+            content: const Text('Would you like to print this bill now?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx, 'save_only'),
+                child: const Text('Save Only', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(dialogCtx, 'save_and_print'),
+                icon: const Icon(Icons.print, size: 18),
+                label: const Text('Save and Print'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
+
         if (mounted) {
-          context.go('/home');
+          if (result == 'save_and_print') {
+            await InvoicePdfService(ref.read(databaseProvider)).printInvoice(id);
+          }
+          if (mounted) {
+            context.go('/home');
+          }
         }
       }
     } catch (e) {

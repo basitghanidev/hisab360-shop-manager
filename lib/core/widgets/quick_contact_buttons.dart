@@ -13,7 +13,7 @@ class QuickContactButtons extends StatelessWidget {
       children: [
         _button(Icons.phone_outlined, 'Call', () => _launch('tel:$phone')),
         const SizedBox(width: 8),
-        _button(Icons.message_outlined, 'WhatsApp', () => _launch('https://wa.me/92${phone!.replaceAll(RegExp(r'[^0-9]'), '').substring(1)}')),
+        _button(Icons.message_outlined, 'Message', () => _launch('https://wa.me/92${phone!.replaceAll(RegExp(r'[^0-9]'), '').substring(1)}')),
       ],
     );
   }

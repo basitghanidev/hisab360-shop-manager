@@ -39,10 +39,10 @@ class _AddEditItemScreenState extends ConsumerState<AddEditItemScreen> {
     super.initState();
     _nameController = TextEditingController();
     _itemCodeController = TextEditingController();
-    _purchasePriceController = TextEditingController(text: '0');
-    _resellerPriceController = TextEditingController(text: '0');
-    _retailPriceController = TextEditingController(text: '0');
-    _currentStockController = TextEditingController(text: '0');
+    _purchasePriceController = TextEditingController();
+    _resellerPriceController = TextEditingController();
+    _retailPriceController = TextEditingController();
+    _currentStockController = TextEditingController();
     _reorderLevelController = TextEditingController(text: '5');
     _descriptionController = TextEditingController();
 
@@ -68,11 +68,11 @@ class _AddEditItemScreenState extends ConsumerState<AddEditItemScreen> {
     if (item != null) {
       _nameController.text = item.name;
       _itemCodeController.text = item.itemCode ?? '';
-      _purchasePriceController.text = Money.fromPaisa(item.purchasePrice).toDouble().toString();
-      _resellerPriceController.text = Money.fromPaisa(item.defaultResellerPrice).toDouble().toString();
-      _retailPriceController.text = Money.fromPaisa(item.retailPrice).toDouble().toString();
-      _currentStockController.text = item.currentStock.toString();
-      _reorderLevelController.text = item.lowStockLimit.toString();
+      _purchasePriceController.text = item.purchasePrice == 0 ? '' : Money.fromPaisa(item.purchasePrice).toDouble().toString();
+      _resellerPriceController.text = item.defaultResellerPrice == 0 ? '' : Money.fromPaisa(item.defaultResellerPrice).toDouble().toString();
+      _retailPriceController.text = item.retailPrice == 0 ? '' : Money.fromPaisa(item.retailPrice).toDouble().toString();
+      _currentStockController.text = item.currentStock == 0 ? '' : item.currentStock.toString();
+      _reorderLevelController.text = item.lowStockLimit == 5.0 ? '5' : item.lowStockLimit.toString();
       _descriptionController.text = item.description ?? '';
       _selectedCategoryId = item.categoryId;
       _selectedUnitTypeId = item.unitTypeId;

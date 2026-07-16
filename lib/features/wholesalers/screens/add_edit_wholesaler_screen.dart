@@ -38,7 +38,7 @@ class _AddEditWholesalerScreenState extends ConsumerState<AddEditWholesalerScree
     _addressController = TextEditingController();
     _areaController = TextEditingController();
     _notesController = TextEditingController();
-    _openingBalanceController = TextEditingController(text: '0');
+    _openingBalanceController = TextEditingController();
 
     if (widget.id != null) {
       _loadWholesaler();

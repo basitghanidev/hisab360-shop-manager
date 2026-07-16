@@ -20,11 +20,26 @@ class HomeScreen extends ConsumerWidget {
     final lowStockAsync = ref.watch(lowStockItemsProvider);
     final settingsAsync = ref.watch(settingsStreamProvider);
 
-    final crossAxisCount = MediaQuery.of(context).size.width > 900 ? 4 : 2;
+    int crossAxisCount;
+    final width = MediaQuery.of(context).size.width;
+    if (width > 1100) {
+      crossAxisCount = 4; // 14 inch / Large monitor
+    } else if (width > 800) {
+      crossAxisCount = 3; // 12 inch / Tablet
+    } else {
+      crossAxisCount = 2; // Mobile
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('📋 Hisab360', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/images/app_logo.png', height: 28),
+            const SizedBox(width: 8),
+            const Text('Hisab360', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+          ],
+        ),
         actions: [
           AnimatedSyncIcon(
             onPressed: () {
@@ -87,11 +102,11 @@ class HomeScreen extends ConsumerWidget {
                               Expanded(child: _statCard('Cash Taken (Today)', CurrencyFormatter.format(data.todayReceived), AppColors.success, Icons.payments)),
                               const SizedBox(width: 12),
                             ],
-                            Expanded(child: _statCard('Cash Paid (Today)', CurrencyFormatter.format(data.todayPaid), AppColors.danger, Icons.outbox)),
+                            Expanded(child: _statCard('Monthly Expenses', CurrencyFormatter.format(data.monthExpenses), AppColors.danger, Icons.outbond)),
                             const SizedBox(width: 12),
-                            Expanded(child: _statCard('Total Receivable', CurrencyFormatter.format(data.wholesalerOutstanding + data.customerOutstanding + data.supplierCredit), AppColors.success, Icons.arrow_downward)),
+                            Expanded(child: _statCard('Total Receivable', CurrencyFormatter.format(data.totalReceivable), AppColors.success, Icons.arrow_downward)),
                             const SizedBox(width: 12),
-                            Expanded(child: _statCard('Total Payable', CurrencyFormatter.format(data.supplierOutstanding + data.wholesalerCredit + data.customerCredit), AppColors.danger, Icons.arrow_upward)),
+                            Expanded(child: _statCard('Total Payable', CurrencyFormatter.format(data.totalPayable), AppColors.danger, Icons.arrow_upward)),
                           ],
                         ),
                       ],
@@ -177,13 +192,14 @@ class HomeScreen extends ConsumerWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 1.4,
               children: [
-                _actionCard(context, Icons.add_shopping_cart, 'New Sale', 'Nayi Bikri', '/invoice/sale', AppColors.primary),
+                _actionCard(context, Icons.add_shopping_cart, 'New Bill', 'Nayi Bill', '/invoice/sale', AppColors.primary),
                 _actionCard(context, Icons.shopping_bag_outlined, 'Purchase', 'Maal Khareedna', '/invoice/purchase', AppColors.accent),
-                _actionCard(context, Icons.payment, 'Payment', 'Adaigi', '/payments/record', AppColors.success),
-                _actionCard(context, Icons.assignment_return_outlined, 'Returns', 'Maal Wapsi', '/returns/create', AppColors.danger),
+                _actionCard(context, Icons.outbond_outlined, 'Expenses', 'Kharchay', '/expenses', AppColors.danger),
+                _actionCard(context, Icons.assignment_return_outlined, 'Returns', 'Maal Wapsi', '/returns/create', AppColors.warning),
                 _actionCard(context, Icons.receipt_long_outlined, 'All Bills', 'Sab Bill', '/invoice/list', Colors.indigo),
-                _actionCard(context, Icons.drafts_outlined, 'Drafts', 'Adhoori Bills', '/drafts', Colors.deepOrange),
+                _actionCard(context, Icons.bar_chart, 'Reports', 'Sab Reportien', '/reports', Colors.teal),
                 _actionCard(context, Icons.people_outline, 'People', 'Logon Ka Hisab', '/people', Colors.blueGrey),
+                _actionCard(context, Icons.drafts_outlined, 'Drafts', 'Adhoori Bills', '/drafts', Colors.deepOrange),
               ],
             ),
             const SizedBox(height: 16),

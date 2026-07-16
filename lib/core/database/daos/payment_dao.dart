@@ -176,4 +176,89 @@ class PaymentDao extends DatabaseAccessor<AppDatabase> with _$PaymentDaoMixin {
     final seq = result.length + 1;
     return 'PAY-$year-${seq.toString().padLeft(6, '0')}';
   }
+
+  Future<void> recordManualPayment({
+    required String partyType,
+    required int partyId,
+    required int amount,
+    required String direction,
+    required DateTime date,
+    String? notes,
+  }) async {
+    return transaction(() async {
+      final paymentId = await into(payments).insert(PaymentsCompanion.insert(
+        amount: Value(amount),
+        paymentDate: Value(date),
+        notes: Value(notes),
+        paymentDirection: Value(direction),
+        partyId: Value(partyId),
+        partyType: Value(partyType),
+        paymentMethod: 'cash', // Default to cash for manual ledger entries
+      ));
+
+      int change = 0;
+      int newBalance = 0;
+      String partyName = 'Unknown';
+
+      if (partyType == 'customer') {
+        final c = await (select(customers)..where((t) => t.id.equals(partyId))).getSingle();
+        partyName = c.name;
+        // customer: positive = they owe us, negative = they overpaid.
+        // money_in (YOU GOT) -> reduces balance (Credit)
+        // money_out (YOU GAVE) -> increases balance (Debit)
+        change = direction == 'money_in' ? -amount : amount;
+        newBalance = c.currentBalance + change;
+        await (update(customers)..where((t) => t.id.equals(partyId))).write(CustomersCompanion(currentBalance: Value(newBalance)));
+      } else if (partyType == 'wholesaler') {
+        final w = await (select(wholesalers)..where((t) => t.id.equals(partyId))).getSingle();
+        partyName = w.name;
+        change = direction == 'money_in' ? -amount : amount;
+        newBalance = w.currentBalance + change;
+        await (update(wholesalers)..where((t) => t.id.equals(partyId))).write(WholesalersCompanion(currentBalance: Value(newBalance)));
+      } else if (partyType == 'supplier') {
+        final s = await (select(suppliers)..where((t) => t.id.equals(partyId))).getSingle();
+        partyName = s.name;
+        // supplier: positive = we owe them, negative = we paid extra.
+        // money_out (YOU GAVE) -> reduces balance (Debit)
+        // money_in (YOU GOT) -> increases balance (Credit)
+        change = direction == 'money_out' ? -amount : amount;
+        newBalance = s.currentBalance + change;
+        await (update(suppliers)..where((t) => t.id.equals(partyId))).write(SuppliersCompanion(currentBalance: Value(newBalance)));
+      }
+
+      // Record in Ledger
+      await into(ledgerEntries).insert(LedgerEntriesCompanion.insert(
+        partyType: partyType,
+        partyId: partyId,
+        entryType: 'payment',
+        debit: Value(direction == 'money_out' ? amount : 0),
+        credit: Value(direction == 'money_in' ? amount : 0),
+        balanceAfter: Value(newBalance),
+        paymentId: Value(paymentId),
+        notes: Value(notes),
+        entryDate: Value(date),
+      ));
+
+      // Create a dummy "Invoice" record for the receipt
+      final receiptNumber = await _generateReceiptNumber();
+      await into(invoices).insert(InvoicesCompanion.insert(
+        invoiceNumber: receiptNumber,
+        invoiceType: '${partyType}_payment_receipt',
+        totalAmount: Value(amount),
+        amountPaid: Value(amount),
+        amountRemaining: const Value(0),
+        status: const Value('paid'),
+        partyNameSnapshot: Value(partyName),
+        partyTypeSnapshot: Value(partyType),
+        previousBalance: Value(newBalance - change),
+        totalBalanceAfter: Value(newBalance),
+        paymentMethod: const Value('cash'),
+        notes: Value(notes ?? 'Ledger Entry: $direction'),
+        customerId: Value(partyType == 'customer' ? partyId : null),
+        wholesalerId: Value(partyType == 'wholesaler' ? partyId : null),
+        supplierId: Value(partyType == 'supplier' ? partyId : null),
+        invoiceDate: Value(date),
+      ));
+    });
+  }
 }

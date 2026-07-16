@@ -12,6 +12,7 @@ import 'package:sentery_app/core/database/daos/payment_dao.dart';
 import 'package:sentery_app/core/database/daos/audit_dao.dart';
 import 'package:sentery_app/core/database/daos/settings_dao.dart';
 import 'package:sentery_app/core/database/daos/draft_dao.dart';
+import 'package:sentery_app/core/database/daos/expense_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -272,6 +273,21 @@ class DraftInvoices extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+class ExpenseCategories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 50)();
+  TextColumn get nameUrdu => text().nullable()();
+}
+
+class Expenses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get categoryId => integer().nullable().references(ExpenseCategories, #id)();
+  IntColumn get amount => integer().withDefault(const Constant(0))();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get date => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(tables: [
   AppSettings,
   ItemCategories,
@@ -292,6 +308,8 @@ class DraftInvoices extends Table {
   PriceLog,
   StockMovements,
   DraftInvoices,
+  ExpenseCategories,
+  Expenses,
 ], daos: [
   SupplierDao,
   WholesalerDao,
@@ -304,20 +322,17 @@ class DraftInvoices extends Table {
   AuditDao,
   SettingsDao,
   DraftDao,
+  ExpenseDao,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase()
       : super(driftDatabase(
-          name: 'sentery',
-          web: DriftWebOptions(
-            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-            driftWorker: Uri.parse('drift_worker.js'),
-          ),
+          name: 'hisab360_v1', // Renamed for professional branding and safety
         ));
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 10; 
+  int get schemaVersion => 11; 
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -326,6 +341,10 @@ class AppDatabase extends _$AppDatabase {
       await _insertDefaultData();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 11) {
+        await m.createTable(expenseCategories);
+        await m.createTable(expenses);
+      }
       if (from < 10) {
         await m.addColumn(appSettings, appSettings.pdfPageSize);
       }
@@ -380,6 +399,15 @@ class AppDatabase extends _$AppDatabase {
         ItemCategoriesCompanion.insert(name: 'Taps & Valves', nameUrdu: Value('Nals')),
         ItemCategoriesCompanion.insert(name: 'Tiles', nameUrdu: Value('Tiles')),
         ItemCategoriesCompanion.insert(name: 'Other', nameUrdu: Value('Aur')),
+      ]);
+
+      batch.insertAll(expenseCategories, [
+        ExpenseCategoriesCompanion.insert(name: 'Rent', nameUrdu: Value('Kiraya')),
+        ExpenseCategoriesCompanion.insert(name: 'Electricity', nameUrdu: Value('Bijli')),
+        ExpenseCategoriesCompanion.insert(name: 'Salaries', nameUrdu: Value('Tankhwah')),
+        ExpenseCategoriesCompanion.insert(name: 'Transport', nameUrdu: Value('Sawari')),
+        ExpenseCategoriesCompanion.insert(name: 'Tea/Food', nameUrdu: Value('Chaye Khana')),
+        ExpenseCategoriesCompanion.insert(name: 'Other', nameUrdu: Value('Aur')),
       ]);
 
       batch.insert(appSettings, AppSettingsCompanion.insert());

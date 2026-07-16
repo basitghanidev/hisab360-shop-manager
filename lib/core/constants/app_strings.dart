@@ -60,7 +60,6 @@ class AppStrings {
   static const String searchRoman = 'Dhoondein...';
   static const String print = 'Print';
   static const String share = 'Share';
-  static const String whatsapp = 'WhatsApp';
 
   // Business Specific
   static const String wholesaler = 'Wholesaler';

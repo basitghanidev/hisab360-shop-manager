@@ -31,7 +31,7 @@ class AddItemToInvoiceSheet extends ConsumerStatefulWidget {
 class _AddItemToInvoiceSheetState extends ConsumerState<AddItemToInvoiceSheet> {
   Item? _selectedItem;
   String? _selectedUnitType;
-  final _qtyController = TextEditingController(text: '1');
+  final _qtyController = TextEditingController();
   final _priceController = TextEditingController();
   List<WholesalerItemPrice> _customPrices = [];
   List<String> _priceHistory = []; 

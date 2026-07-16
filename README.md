@@ -95,6 +95,19 @@ Built with a "Production-First" mindset:
 
 ---
 
+## 🌐 Web Deployment (Vercel)
+
+You can host **Hisab360** on Vercel for free:
+1. Connect your GitHub repository to [Vercel](https://vercel.com).
+2. Vercel will automatically detect the `package.json`.
+3. Use the following settings:
+   - **Framework Preset:** Other
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `build/web`
+4. Deploy! Your app will be live at `your-project.vercel.app`.
+
+---
+
 ## 👤 Author
 
 **Basit Ghani**

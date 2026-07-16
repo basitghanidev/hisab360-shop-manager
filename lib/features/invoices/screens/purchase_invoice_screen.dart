@@ -32,7 +32,7 @@ class PurchaseInvoiceScreen extends ConsumerStatefulWidget {
 class _PurchaseInvoiceScreenState extends ConsumerState<PurchaseInvoiceScreen> {
   int? _selectedSupplierId;
   Money _previousBalance = Money.zero;
-  final _amountPaidController = TextEditingController(text: '0');
+  final _amountPaidController = TextEditingController();
   final _supplierChallanController = TextEditingController();
   final _notesController = TextEditingController();
   DateTime _invoiceDate = DateTime.now();
@@ -278,7 +278,7 @@ class _PurchaseInvoiceScreenState extends ConsumerState<PurchaseInvoiceScreen> {
                 textAlign: TextAlign.end,
                 onChanged: (v) => setState(() {}),
                 style: const TextStyle(fontWeight: FontWeight.bold),
-                decoration: const InputDecoration(isDense: true, prefixText: 'Rs.'),
+                decoration: const InputDecoration(isDense: true, prefixText: 'Rs.', hintText: '0'),
               ),
             )
           else

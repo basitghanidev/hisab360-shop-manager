@@ -108,4 +108,52 @@ class LedgerService {
       }
     });
   }
+
+  /// Record a ledger entry using raw paisa values (no conversion from double).
+  Future<void> recordEntry({
+    required String partyType,
+    required int partyId,
+    required String entryType,
+    required int debit,
+    required int credit,
+    int? invoiceId,
+    int? paymentId,
+    String? notes,
+    DateTime? entryDate,
+  }) async {
+    await _db.transaction(() async {
+      int currentBalance = await getPartyBalancePaisa(partyType, partyId);
+
+      int newBalance;
+      if (partyType == 'supplier') {
+        newBalance = currentBalance + credit - debit;
+      } else {
+        newBalance = currentBalance + debit - credit;
+      }
+
+      await _db.into(_db.ledgerEntries).insert(LedgerEntriesCompanion.insert(
+            partyType: partyType,
+            partyId: partyId,
+            entryType: entryType,
+            debit: Value(debit),
+            credit: Value(credit),
+            balanceAfter: Value(newBalance),
+            invoiceId: Value(invoiceId),
+            paymentId: Value(paymentId),
+            notes: Value(notes),
+            entryDate: Value(entryDate ?? DateTime.now()),
+          ));
+
+      if (partyType == 'customer') {
+        await (_db.update(_db.customers)..where((t) => t.id.equals(partyId)))
+            .write(CustomersCompanion(currentBalance: Value(newBalance)));
+      } else if (partyType == 'wholesaler') {
+        await (_db.update(_db.wholesalers)..where((t) => t.id.equals(partyId)))
+            .write(WholesalersCompanion(currentBalance: Value(newBalance)));
+      } else if (partyType == 'supplier') {
+        await (_db.update(_db.suppliers)..where((t) => t.id.equals(partyId)))
+            .write(SuppliersCompanion(currentBalance: Value(newBalance)));
+      }
+    });
+  }
 }

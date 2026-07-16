@@ -36,7 +36,7 @@ class _AddEditSupplierScreenState extends ConsumerState<AddEditSupplierScreen> {
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
     _notesController = TextEditingController();
-    _openingBalanceController = TextEditingController(text: '0');
+    _openingBalanceController = TextEditingController();
 
     if (widget.id != null) {
       _loadSupplier();

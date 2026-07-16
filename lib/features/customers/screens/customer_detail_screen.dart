@@ -8,6 +8,8 @@ import 'package:sentery_app/core/utils/currency_formatter.dart';
 import 'package:sentery_app/core/utils/money_utils.dart';
 import 'package:sentery_app/features/customers/providers/customer_provider.dart';
 import 'package:sentery_app/features/invoices/providers/invoice_provider.dart';
+import 'package:sentery_app/core/database/database_provider.dart';
+import 'package:sentery_app/core/services/invoice_pdf_service.dart';
 import 'package:sentery_app/core/widgets/ledger_entry_tile.dart';
 import 'package:sentery_app/core/widgets/app_card.dart';
 import 'package:sentery_app/core/widgets/bilingual_label.dart';
@@ -50,7 +52,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                   child: TabBarView(
                     children: [
                       _buildLedgerTab(ledgerAsync),
-                      _buildInvoicesTab(invoicesAsync, context),
+                      _buildInvoicesTab(invoicesAsync, context, ref),
                     ],
                   ),
                 ),
@@ -60,6 +62,46 @@ class CustomerDetailScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => Center(child: Text('Error: $err')),
         ),
+        bottomNavigationBar: _buildBottomActionButtons(context),
+      ),
+    );
+  }
+
+  Widget _buildBottomActionButtons(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => context.push('/people/add-ledger-entry?partyType=customer&partyId=$id&isGave=true'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.danger,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('YOU GAVE Rs', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => context.push('/people/add-ledger-entry?partyType=customer&partyId=$id&isGave=false'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('YOU GOT Rs', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -110,7 +152,7 @@ class CustomerDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInvoicesTab(AsyncValue<List<Invoice>> invoicesAsync, BuildContext context) {
+  Widget _buildInvoicesTab(AsyncValue<List<Invoice>> invoicesAsync, BuildContext context, WidgetRef ref) {
     return invoicesAsync.when(
       data: (list) {
         if (list.isEmpty) return const Center(child: Text('No bills found.'));
@@ -121,7 +163,9 @@ class CustomerDetailScreen extends ConsumerWidget {
             final inv = list[index];
             final isPaid = inv.status == 'paid';
             return AppCard(
-              onTap: () => context.push('/invoice/${inv.id}'),
+              onTap: () async {
+                await InvoicePdfService(ref.read(databaseProvider)).printInvoice(inv.id);
+              },
               margin: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [

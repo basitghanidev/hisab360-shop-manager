@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentery_app/core/database/app_database.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 
 class BackupService {
   final AppDatabase _db;
@@ -55,16 +57,31 @@ class BackupService {
     return file.path;
   }
 
-  /// Creates the backup file AND opens the OS share sheet.
+  /// Creates the backup file AND opens the OS share sheet (Mobile) or Save As (Desktop).
   /// Used by the "Manual Backup & Share" button only.
   Future<String> exportAndShare() async {
     final path = await createBackupFile();
     final file = File(path);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'Hisab360 Backup — ${DateTime.now().toLocal().toString().split('.')[0]}',
-    );
+    if (!kIsWeb && Platform.isWindows) {
+      // Professional "Save As" for Windows
+      final String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Backup File',
+        fileName: 'hisab360_backup_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.json',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (outputFile != null) {
+        await file.copy(outputFile);
+      }
+    } else {
+      // Mobile: Standard share sheet
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Hisab360 Backup — ${DateTime.now().toLocal().toString().split('.')[0]}',
+      );
+    }
 
     return path;
   }
