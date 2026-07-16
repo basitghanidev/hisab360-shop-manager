@@ -6,7 +6,7 @@ if [ -d "flutter" ]; then
   cd flutter && git pull --tags && cd ..
 else
   echo "Cloning clean Flutter SDK with release tags..."
-  git clone --depth 1 --branch stable https://github.com
+      git clone --depth 1 --branch stable https://github.com
 fi
 
 # 2. Map pathing parameters
