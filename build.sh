@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 1. Force Git to fetch the release tags so Flutter knows its version
+# 1. Clone Flutter stable cleanly with release tags intact
 if [ -d "flutter" ]; then
   echo "Flutter directory exists, pulling updates..."
   cd flutter && git pull --tags && cd ..
@@ -15,12 +15,11 @@ export PATH="$PATH:`pwd`/flutter/bin"
 # 3. Configure and activate the web target environment
 flutter config --enable-web
 
-# 4. CRITICAL: Override pub to ignore native desktop requirements during a web build
-export PUB_OPTIONS="--no-precompile"
+# 4. Resolve web dependencies
 flutter pub get
 
-# 5. Generate SQLite Drift classes (Required for your app)
+# 5. Generate SQLite Drift classes
 flutter pub run build_runner build --delete-conflicting-outputs
 
-# 6. Build your release distribution application safely
+# 6. Build your web deployment package
 flutter build web --release --dart-define=FLUTTER_WEB_DEFAULT_RENDERER=canvaskit
