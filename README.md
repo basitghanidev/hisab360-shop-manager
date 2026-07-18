@@ -18,7 +18,7 @@ A professional, offline-first Point of Sale (POS) and Khata management system bu
 
 ### 💳 Khata & Debt Management
 - **360° Financial View:** Manage Suppliers, Wholesalers, and Customers in one place.
-- **Bilingual Ledgers:** Clear English/Roman-Urdu labels (Wasooli, Adaigi) for better accessibility.
+- **Bilingual Ledgers:** Clear English/Roman Urdu labels (Wasooli, Adaigi) for better accessibility.
 - **Refund Logic:** Handles returns with immediate cash refunds or credit adjustments automatically.
 
 ### 📊 Reporting & Analytics
