@@ -21,48 +21,65 @@
 
   <script src="flutter.js" defer></script>
 </head>
-<body style="background-color: #F5F7FA;">
-  <div id="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: sans-serif; color: #555;">
-    <img src="favicon.png" style="width: 80px; height: 80px; margin-bottom: 20px;" />
-    <div style="font-size: 18px; font-weight: bold;">Hisab360</div>
-    <div id="status" style="margin-top: 10px; font-size: 14px;">Initializing system...</div>
-    <!-- Fixed error log ID to match the script below -->
-    <div id="error-log" style="margin-top: 20px; color: red; font-size: 12px; max-width: 80%; text-align: center; font-family: monospace; white-space: pre-wrap;"></div>
+<body style="background-color: #F5F7FA; margin: 0; padding: 0; overflow: hidden;">
+  <div id="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #555;">
+    <img src="favicon.png" style="width: 80px; height: 80px; margin-bottom: 24px;" />
+    <div style="font-size: 20px; font-weight: 600; color: #1a1a1a;">Hisab360</div>
+    <div id="status" style="margin-top: 12px; font-size: 14px; color: #888;">Preparing shop manager...</div>
+    <div id="error-log" style="margin-top: 30px; color: #D32F2F; font-size: 11px; max-width: 85%; text-align: center; font-family: monospace; white-space: pre-wrap; line-height: 1.5; background: #FFEBEE; padding: 10px; border-radius: 8px; display: none;"></div>
   </div>
 
   <script>
-    // Universal Error Catcher - Fixed ID mismatch
+    // Professional Error Logger - Captures the REAL reason for white screen
     window.onerror = function (msg, url, lineNo, columnNo, error) {
-      console.error("Global Error: ", msg, " at ", url, ":", lineNo);
+      console.error("Master Diagnostic: ", msg, url, lineNo);
       var log = document.getElementById('error-log');
       if (log) {
-        log.innerText = "CRASH DETECTED: " + msg + "\nLocation: " + url + ":" + lineNo;
+        log.style.display = 'block';
+        log.innerText = "CRITICAL BOOT ERROR:\n" + msg + "\n\nTry opening in Private/Incognito mode or press Ctrl+F5.";
       }
       return false;
     };
 
     window.addEventListener('load', function(ev) {
       const status = document.getElementById('status');
-      if (status) status.innerText = "Loading engine...";
+
+      // Stage 1: Load Flutter script
+      if (status) status.innerText = "Synchronizing files...";
 
       _flutter.loader.loadEntrypoint({
         onEntrypointLoaded: function(engineInitializer) {
-          if (status) status.innerText = "Starting dashboard...";
+          // Stage 2: Initialize Engine
+          if (status) status.innerText = "Starting engine...";
+
           engineInitializer.initializeEngine({
-            // Force HTML renderer to solve the CanvasKit crash seen in console
-            webRenderer: "html"
+            webRenderer: "html" // Bulletproof compatibility
           }).then(function(appRunner) {
+            // Stage 3: Run App
+            if (status) status.innerText = "Loading dashboard...";
             appRunner.runApp();
-            var loadingDiv = document.getElementById('loading');
-            if (loadingDiv) loadingDiv.remove();
+
+            // Cleanup
+            setTimeout(function() {
+               var loadingDiv = document.getElementById('loading');
+               if (loadingDiv) loadingDiv.remove();
+            }, 1000);
           }).catch(function(e) {
-             console.error("Engine Init Error:", e);
-             document.getElementById('error-log').innerText = "Engine Error: " + e;
+             console.error("Boot failure:", e);
+             var log = document.getElementById('error-log');
+             if (log) {
+                log.style.display = 'block';
+                log.innerText = "ENGINE BOOT FAILED:\n" + e;
+             }
           });
         }
       }).catch(function(e) {
-          console.error("Load Error:", e);
-          document.getElementById('error-log').innerText = "Load Error: " + e;
+          console.error("File load failure:", e);
+          var log = document.getElementById('error-log');
+          if (log) {
+             log.style.display = 'block';
+             log.innerText = "FILE LOADING FAILED:\n" + e;
+          }
       });
     });
   </script>
