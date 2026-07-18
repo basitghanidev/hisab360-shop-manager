@@ -50,7 +50,7 @@ class _GlobalErrorScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'The app encountered a technical problem. Your data is still safe.',
+                  'The App encountered a technical problem. Your data is still safe.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey),
                 ),
