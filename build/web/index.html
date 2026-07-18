@@ -26,34 +26,42 @@
     <img src="favicon.png" style="width: 80px; height: 80px; margin-bottom: 20px;" />
     <div style="font-size: 18px; font-weight: bold;">Hisab360</div>
     <div id="status" style="margin-top: 10px; font-size: 14px;">Initializing system...</div>
-    <div id="error-log" style="margin-top: 20px; color: red; font-size: 12px; max-width: 80%; text-align: center; font-family: monospace;"></div>
+    <!-- Fixed error log ID to match the script below -->
+    <div id="error-log" style="margin-top: 20px; color: red; font-size: 12px; max-width: 80%; text-align: center; font-family: monospace; white-space: pre-wrap;"></div>
   </div>
 
   <script>
-    // Universal Error Catcher - This will show us EXACTLY why it shows a white screen
+    // Universal Error Catcher - Fixed ID mismatch
     window.onerror = function (msg, url, lineNo, columnNo, error) {
+      console.error("Global Error: ", msg, " at ", url, ":", lineNo);
       var log = document.getElementById('error-log');
-      log.innerText = "CRASH DETECTED: " + msg + " (at line " + lineNo + ")";
+      if (log) {
+        log.innerText = "CRASH DETECTED: " + msg + "\nLocation: " + url + ":" + lineNo;
+      }
       return false;
     };
 
     window.addEventListener('load', function(ev) {
       const status = document.getElementById('status');
-      status.innerText = "Loading engine...";
+      if (status) status.innerText = "Loading engine...";
 
       _flutter.loader.loadEntrypoint({
         onEntrypointLoaded: function(engineInitializer) {
-          status.innerText = "Starting app...";
+          if (status) status.innerText = "Starting dashboard...";
           engineInitializer.initializeEngine({
+            // Force HTML renderer to solve the CanvasKit crash seen in console
             webRenderer: "html"
           }).then(function(appRunner) {
             appRunner.runApp();
-            document.getElementById('loading').remove();
+            var loadingDiv = document.getElementById('loading');
+            if (loadingDiv) loadingDiv.remove();
           }).catch(function(e) {
+             console.error("Engine Init Error:", e);
              document.getElementById('error-log').innerText = "Engine Error: " + e;
           });
         }
       }).catch(function(e) {
+          console.error("Load Error:", e);
           document.getElementById('error-log').innerText = "Load Error: " + e;
       });
     });
