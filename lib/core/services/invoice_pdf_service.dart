@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
@@ -273,11 +273,12 @@ class InvoicePdfService {
   Future<void> previewInvoice(int invoiceId) async {
     final bytes = await generateInvoicePdf(invoiceId);
     
-    if (Platform.isIOS) {
+    // CRITICAL FIX: Avoid Platform check on Web
+    if (!kIsWeb && io.Platform.isIOS) {
       // iOS: print/share dialog via Printing — works natively
       await Printing.layoutPdf(onLayout: (format) => bytes);
     } else {
-      // Android: share via OS share sheet — much more user-friendly
+      // Android/Desktop: share via OS share sheet — much more user-friendly
       await shareInvoice(invoiceId);
     }
   }
@@ -290,7 +291,7 @@ class InvoicePdfService {
   Future<void> shareInvoice(int invoiceId) async {
     final bytes = await generateInvoicePdf(invoiceId);
     final directory = await getTemporaryDirectory();
-    final file = File('${directory.path}/Invoice_$invoiceId.pdf');
+    final file = io.File('${directory.path}/Invoice_$invoiceId.pdf');
     await file.writeAsBytes(bytes);
     await Share.shareXFiles(
       [XFile(file.path)],

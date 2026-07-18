@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
@@ -52,7 +52,7 @@ class BackupService {
     // Use a FIXED filename so each Drive sync overwrites the previous backup
     // instead of creating a new file every time (prevents Drive storage clutter).
     const filename = 'hisab360_backup.json';
-    final file = File('$tempDir/$filename');
+    final file = io.File('$tempDir/$filename');
     await file.writeAsString(jsonString);
     return file.path;
   }
@@ -61,9 +61,10 @@ class BackupService {
   /// Used by the "Manual Backup & Share" button only.
   Future<String> exportAndShare() async {
     final path = await createBackupFile();
-    final file = File(path);
+    final file = io.File(path);
 
-    if (!kIsWeb && Platform.isWindows) {
+    // CRITICAL FIX: Use kIsWeb to avoid crashing on browser
+    if (!kIsWeb && io.Platform.isWindows) {
       // Professional "Save As" for Windows
       final String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Backup File',
@@ -75,12 +76,15 @@ class BackupService {
       if (outputFile != null) {
         await file.copy(outputFile);
       }
-    } else {
+    } else if (!kIsWeb) {
       // Mobile: Standard share sheet
       await Share.shareXFiles(
         [XFile(file.path)],
         text: 'Hisab360 Backup — ${DateTime.now().toLocal().toString().split('.')[0]}',
       );
+    } else {
+      // Web: Download via browser (to be implemented if needed, but prevents crash now)
+      debugPrint('[Backup] Manual export not yet supported on Web browser.');
     }
 
     return path;
@@ -135,7 +139,7 @@ class BackupService {
     final Map<String, dynamic> data;
     if (source is String) {
       data = jsonDecode(source);
-    } else if (source is File) {
+    } else if (source is io.File) {
       final content = await source.readAsString();
       data = jsonDecode(content);
     } else {

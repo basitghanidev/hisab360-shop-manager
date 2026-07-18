@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:sentery_app/core/services/backup_service.dart';
@@ -9,7 +9,8 @@ class DesktopLifecycleService with WindowListener {
   DesktopLifecycleService(this.db);
 
   Future<void> init() async {
-    if (!kIsWeb && Platform.isWindows) {
+    // CRITICAL FIX: Avoid Platform check on Web
+    if (!kIsWeb && io.Platform.isWindows) {
       await windowManager.ensureInitialized();
       windowManager.addListener(this);
       // Prevent automatic exit so we can backup first

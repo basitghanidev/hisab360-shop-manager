@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +36,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   Future<void> _loadPersistedState() async {
-    final isDesktop = !kIsWeb && Platform.isWindows;
+    // CRITICAL FIX: Avoid Platform check on Web
+    final isDesktop = !kIsWeb && io.Platform.isWindows;
     if (isDesktop) return; // Google Sign-in not supported on Windows
 
     final service = ref.read(googleDriveServiceProvider);
@@ -61,7 +61,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = !kIsWeb && Platform.isWindows;
+    // CRITICAL FIX: Avoid Platform check on Web
+    final isDesktop = !kIsWeb && io.Platform.isWindows;
 
     return Scaffold(
       appBar: AppBar(
@@ -369,7 +370,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     try {
       final db = ref.read(databaseProvider);
       final path = await BackupService(db).createBackupFile();
-      final result = await ref.read(googleDriveServiceProvider).uploadBackup(File(path));
+      final result = await ref.read(googleDriveServiceProvider).uploadBackup(io.File(path));
 
       if (result.success) {
         final syncTimeStr = DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now());
@@ -431,7 +432,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
     _setWorking(true, label: 'Restoring from file...');
     try {
-      final file = File(result.files.single.path!);
+      final file = io.File(result.files.single.path!);
       final db = ref.read(databaseProvider);
       await BackupService(db).restoreBackup(file);
       _showSnackBar('Restore successful! Please restart app.', color: AppColors.success, duration: 8);
