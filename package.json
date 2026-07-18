@@ -2,6 +2,6 @@
   "name": "hisab360-shop-manager",
   "version": "1.1.0",
   "scripts": {
-    "build": "echo 'Skipping build, deploying static files from build/web'"
+    "build": "echo 'Deploying static files from build/web'"
   }
 }
