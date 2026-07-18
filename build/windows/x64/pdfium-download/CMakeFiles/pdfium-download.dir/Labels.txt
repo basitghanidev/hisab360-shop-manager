@@ -1,0 +1,14 @@
+# Target labels
+ pdfium-download
+# Source files and their labels
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/pdfium-download
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/d9b162c8590669ff790ce5f7a009c294/pdfium-download.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/1f0b53093c05ad8c17f079f86054524b/pdfium-download-complete.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-build.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-configure.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-download.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-install.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-mkdir.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-patch.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-test.rule
+D:/My code/possystem/build/windows/x64/pdfium-download/CMakeFiles/703b110937ab673b0bd8907767a002cf/pdfium-download-update.rule
