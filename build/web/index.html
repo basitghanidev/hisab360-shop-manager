@@ -19,30 +19,25 @@
   <title>Hisab360</title>
   <link rel="manifest" href="manifest.json">
 
-  <script>
-    // The value below is injected by flutter build web --base-href /
-    const serviceWorkerVersion = "1117210452" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */;
-  </script>
-  <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
 <body style="background-color: #F5F7FA;">
   <div id="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: sans-serif; color: #555;">
     <img src="favicon.png" style="width: 80px; height: 80px; margin-bottom: 20px;" />
     <div style="font-size: 18px; font-weight: bold;">Hisab360</div>
-    <div style="margin-top: 10px; font-size: 14px;">Initializing system...</div>
+    <div id="status" style="margin-top: 10px; font-size: 14px;">Initializing system...</div>
   </div>
 
   <script>
     window.addEventListener('load', function(ev) {
+      const status = document.getElementById('status');
+      status.innerText = "Loading engine...";
+
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
         onEntrypointLoaded: function(engineInitializer) {
+          status.innerText = "Starting app...";
           engineInitializer.initializeEngine({
-            // Force HTML renderer for maximum compatibility on Vercel
             webRenderer: "html"
           }).then(function(appRunner) {
             appRunner.runApp();
