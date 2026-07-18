@@ -1,0 +1,10 @@
+^D:\MY CODE\POSSYSTEM\BUILD\WINDOWS\X64\_DEPS\SQLITE3-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-SD:/My code/possystem/build/windows/x64/_deps/sqlite3-subbuild" "-BD:/My code/possystem/build/windows/x64/_deps/sqlite3-subbuild" --check-stamp-file "D:/My code/possystem/build/windows/x64/_deps/sqlite3-subbuild/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
