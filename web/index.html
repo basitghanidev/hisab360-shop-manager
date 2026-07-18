@@ -6,7 +6,6 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Hisab360 - Professional Shop Management">
-  <meta name="google-signin-client_id" content="972026787610-911gdkqfcagmook4m8pd1krfnlgjnmv0.apps.googleusercontent.com">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -27,14 +26,21 @@
     <img src="favicon.png" style="width: 80px; height: 80px; margin-bottom: 20px;" />
     <div style="font-size: 18px; font-weight: bold;">Hisab360</div>
     <div id="status" style="margin-top: 10px; font-size: 14px;">Initializing system...</div>
+    <div id="error-log" style="margin-top: 20px; color: red; font-size: 12px; max-width: 80%; text-align: center; font-family: monospace;"></div>
   </div>
 
   <script>
+    // Universal Error Catcher - This will show us EXACTLY why it shows a white screen
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
+      var log = document.getElementById('error-log');
+      log.innerText = "CRASH DETECTED: " + msg + " (at line " + lineNo + ")";
+      return false;
+    };
+
     window.addEventListener('load', function(ev) {
       const status = document.getElementById('status');
       status.innerText = "Loading engine...";
 
-      // Download main.dart.js
       _flutter.loader.loadEntrypoint({
         onEntrypointLoaded: function(engineInitializer) {
           status.innerText = "Starting app...";
@@ -43,8 +49,12 @@
           }).then(function(appRunner) {
             appRunner.runApp();
             document.getElementById('loading').remove();
+          }).catch(function(e) {
+             document.getElementById('error-log').innerText = "Engine Error: " + e;
           });
         }
+      }).catch(function(e) {
+          document.getElementById('error-log').innerText = "Load Error: " + e;
       });
     });
   </script>
