@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
@@ -48,11 +48,14 @@ class ItemExportService {
     final bytes = excel.encode();
     if (bytes == null) return;
 
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/items_export_${DateTime.now().millisecondsSinceEpoch}.xlsx');
-    await file.writeAsBytes(bytes);
-
-    await Share.shareXFiles([XFile(file.path)], text: 'Hisab360 Inventory Export (Excel)');
+    if (!kIsWeb) {
+      final tempDir = await getTemporaryDirectory();
+      final file = io.File('${tempDir.path}/items_export_${DateTime.now().millisecondsSinceEpoch}.xlsx');
+      await file.writeAsBytes(bytes);
+      await Share.shareXFiles([XFile(file.path)], text: 'Hisab360 Inventory Export (Excel)');
+    } else {
+      debugPrint('[Export] Excel download not yet implemented for browser.');
+    }
   }
 
   Future<void> exportToCsv() async {
@@ -77,11 +80,15 @@ class ItemExportService {
     }
 
     String csvData = const ListToCsvConverter().convert(rows);
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/items_export_${DateTime.now().millisecondsSinceEpoch}.csv');
-    await file.writeAsString(csvData);
 
-    await Share.shareXFiles([XFile(file.path)], text: 'Hisab360 Inventory Export (CSV)');
+    if (!kIsWeb) {
+      final tempDir = await getTemporaryDirectory();
+      final file = io.File('${tempDir.path}/items_export_${DateTime.now().millisecondsSinceEpoch}.csv');
+      await file.writeAsString(csvData);
+      await Share.shareXFiles([XFile(file.path)], text: 'Hisab360 Inventory Export (CSV)');
+    } else {
+      debugPrint('[Export] CSV download not yet implemented for browser.');
+    }
   }
 
   Future<void> exportToPdf() async {

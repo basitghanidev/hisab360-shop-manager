@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -134,7 +134,7 @@ class GoogleDriveService {
     }
   }
 
-  Future<DriveUploadResult> uploadBackup(File file) async {
+  Future<DriveUploadResult> uploadBackup(io.File file) async {
     final api = await _getDriveApi();
     if (api == null) return DriveUploadResult.failure('Not signed in to Google.');
 
@@ -178,7 +178,7 @@ class GoogleDriveService {
   }
 
   /// Downloads the latest backup file from Google Drive.
-  Future<File?> downloadBackup() async {
+  Future<io.File?> downloadBackup() async {
     final api = await _getDriveApi();
     if (api == null) return null;
 
@@ -195,7 +195,7 @@ class GoogleDriveService {
       final media = await api.files.get(fileId, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
 
       final tempDir = await getTemporaryDirectory();
-      final downloadFile = File('${tempDir.path}/drive_restore.json');
+      final downloadFile = io.File('${tempDir.path}/drive_restore.json');
       
       final List<int> dataBytes = [];
       await for (final chunk in media.stream) {
