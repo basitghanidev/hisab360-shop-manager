@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:sentery_app/core/database/daos/supplier_dao.dart';
 import 'package:sentery_app/core/database/daos/wholesaler_dao.dart';
@@ -327,8 +328,13 @@ class Expenses extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase()
       : super(driftDatabase(
-          name: 'hisab360_v1', // Renamed for professional branding and safety
+          name: 'hisab360_v1', 
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          ),
         ));
+
   AppDatabase.forTesting(super.executor);
 
   @override
