@@ -331,7 +331,7 @@ class AppDatabase extends _$AppDatabase {
           name: 'hisab360_v1', 
           web: DriftWebOptions(
             sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-            driftWorker: Uri.parse('drift_worker.js'),
+            // Removed driftWorker to simplify deployment and resolve 404
           ),
         ));
 
